@@ -1,0 +1,194 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           String @id @default(cuid())
+  clerkId      String @unique @map("clerk_id")
+  email        String @unique
+  tenHienThi   String @map("ten_hien_thi")
+  vaiTro       String @default("STUDENT") @map("vai_tro")
+
+  lessonProgresses LessonProgress[]
+  examAttempts     ExamAttempt[]
+  flashcardStates  FlashcardState[]
+
+  @@map("users")
+}
+
+model Video {
+  id        String  @id @default(cuid())
+  tieuDe    String  @map("tieu_de")
+  youtubeId String  @map("youtube_id")
+  moTa      String? @map("mo_ta")
+  level     String?
+  isPublish Boolean @default(false) @map("is_publish")
+
+  exams Exam[]
+
+  @@map("videos")
+}
+
+model Lesson {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  tieuDe      String  @map("tieu_de")
+  level       String
+  chuDe       String  @map("chu_de")
+  anhBia      String? @map("anh_bia")
+  thoiGianDoc Int     @default(5) @map("thoi_gian_doc")
+  isPublish   Boolean @default(false) @map("is_publish")
+
+  sections   LessonSection[]
+  progresses LessonProgress[]
+
+  @@map("lessons")
+}
+
+model LessonSection {
+  id       String @id @default(cuid())
+  lessonId String @map("lesson_id")
+  loai     String
+  noiDung  String @map("noi_dung")
+  thuTu    Int    @default(0) @map("thu_tu")
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@map("lesson_sections")
+}
+
+model LessonProgress {
+  id          String  @id @default(cuid())
+  userId      String  @map("user_id")
+  lessonId    String  @map("lesson_id")
+  phanTram    Int     @default(0) @map("phan_tram")
+  daHoanThanh Boolean @default(false) @map("da_hoan_thanh")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@map("lesson_progresses")
+}
+
+model FlashcardDeck {
+  id        String  @id @default(cuid())
+  tieuDe    String  @map("tieu_de")
+  moTa      String? @map("mo_ta")
+  level     String?
+  isPublish Boolean @default(false) @map("is_publish")
+
+  flashcards Flashcard[]
+
+  @@map("flashcard_decks")
+}
+
+model Flashcard {
+  id        String  @id @default(cuid())
+  deckId    String  @map("deck_id")
+  tuPhap    String  @map("tu_phap")
+  nghiaViet String  @map("nghia_viet")
+  phatAm    String? @map("phat_am")
+  viDu      String? @map("vi_du")
+  audioUrl  String? @map("audio_url")
+
+  deck   FlashcardDeck  @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  states FlashcardState[]
+
+  @@map("flashcards")
+}
+
+model FlashcardState {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  flashcardId   String   @map("flashcard_id")
+  soNgayNhacLai Int      @default(1) @map("so_ngay_nhac_lai")
+  danhGiaCuoi   String?  @map("danh_gia_cuoi")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flashcard Flashcard @relation(fields: [flashcardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, flashcardId])
+  @@map("flashcard_states")
+}
+
+model Exam {
+  id          String  @id @default(cuid())
+  tieuDe      String  @map("tieu_de")
+  moTa        String? @map("mo_ta")
+  level       String
+  thoiGianLam Int     @default(45) @map("thoi_gian_lam")
+  isPublish   Boolean @default(false) @map("is_publish")
+  videoId     String? @map("video_id")
+
+  video     Video?        @relation(fields: [videoId], references: [id], onDelete: SetNull)
+  questions Question[]
+  attempts  ExamAttempt[]
+
+  @@map("exams")
+}
+
+model Question {
+  id        String  @id @default(cuid())
+  examId    String  @map("exam_id")
+  loai      String  @default("MULTIPLE_CHOICE")
+  noiDung   String  @map("noi_dung")
+  giaiThich String? @map("giai_thich")
+  thuTu     Int     @default(0) @map("thu_tu")
+
+  exam           Exam            @relation(fields: [examId], references: [id], onDelete: Cascade)
+  answers        Answer[]
+  attemptAnswers AttemptAnswer[]
+
+  @@map("questions")
+}
+
+model Answer {
+  id          String  @id @default(cuid())
+  questionId  String  @map("question_id")
+  noiDung     String  @map("noi_dung")
+  laDapAnDung Boolean @default(false) @map("la_dap_an_dung")
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("answers")
+}
+
+model ExamAttempt {
+  id          String    @id @default(cuid())
+  userId      String    @map("user_id")
+  examId      String    @map("exam_id")
+  diemSo      Float?    @map("diem_so")
+  daDo        Boolean   @default(false) @map("da_do")
+  thoiGianLam Int       @default(0) @map("thoi_gian_lam")
+  daNop       Boolean   @default(false) @map("da_nop")
+  thoiGianNop DateTime? @map("thoi_gian_nop")
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam           Exam            @relation(fields: [examId], references: [id], onDelete: Cascade)
+  attemptAnswers AttemptAnswer[]
+
+  @@map("exam_attempts")
+}
+
+model AttemptAnswer {
+  id          String  @id @default(cuid())
+  attemptId   String  @map("attempt_id")
+  questionId  String  @map("question_id")
+  cauTraLoi   String? @map("cau_tra_loi")
+  laDung      Boolean @default(false) @map("la_dung")
+  diemDatDuoc Int     @default(0) @map("diem_dat_duoc")
+
+  attempt  ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question Question    @relation(fields: [questionId], references: [id])
+
+  @@unique([attemptId, questionId])
+  @@map("attempt_answers")
+}

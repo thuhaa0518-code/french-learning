@@ -1,0 +1,115 @@
+'use client'
+
+import { useState } from 'react'
+import type { MiniQuizContent } from '@/types'
+
+export default function MiniQuiz({ data }: { data: MiniQuizContent }) {
+  // Normalize data for legacy support
+  const questions = data.questions || [{
+    cauHoi: data.cauHoi || '',
+    luaChon: data.luaChon || [],
+    dapAnDung: data.dapAnDung || 'A',
+  }]
+
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string | null>>({})
+  const [submitted, setSubmitted] = useState(false)
+
+  // Calculate score if submitted
+  const correctCount = questions.reduce((count, q, i) => {
+    return count + (selectedAnswers[i] === q.dapAnDung ? 1 : 0)
+  }, 0)
+
+  return (
+    <div className="rounded-xl border-2 border-purple-200 bg-purple-50 p-6">
+      <div className="mb-4 flex items-center justify-between">
+        <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">Mini Quiz</span>
+        {submitted && (
+          <span className="text-sm font-bold text-primary">
+            Đúng {correctCount}/{questions.length}
+          </span>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-8">
+        {questions.map((q, qIndex) => {
+          const selected = selectedAnswers[qIndex]
+          const isCorrect = selected === q.dapAnDung
+
+          return (
+            <div key={qIndex} className="flex flex-col">
+              <p className="mb-4 font-semibold text-gray-900">
+                {questions.length > 1 && <span className="mr-2 text-primary">Câu {qIndex + 1}:</span>}
+                {q.cauHoi}
+              </p>
+
+              <div className="flex flex-col gap-2">
+                {q.luaChon?.map((choice) => {
+                  let className = 'flex items-center gap-3 rounded-lg border-2 px-4 py-3 text-sm font-medium transition-all cursor-pointer '
+                  if (!submitted) {
+                    className += selected === choice.kyHieu
+                      ? 'border-primary bg-white text-primary shadow-sm'
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-primary hover:text-primary hover:shadow-sm'
+                  } else {
+                    if (choice.kyHieu === q.dapAnDung) {
+                      className += 'border-success bg-green-50 text-success'
+                    } else if (choice.kyHieu === selected) {
+                      className += 'border-danger bg-red-50 text-danger'
+                    } else {
+                      className += 'border-gray-200 bg-white text-gray-400 opacity-60'
+                    }
+                  }
+
+                  return (
+                    <button
+                      key={choice.kyHieu}
+                      onClick={() => {
+                        if (!submitted) {
+                          setSelectedAnswers(prev => ({ ...prev, [qIndex]: choice.kyHieu }))
+                        }
+                      }}
+                      className={className}
+                      disabled={submitted}
+                    >
+                      <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold ${selected === choice.kyHieu && !submitted ? 'border-primary bg-primary text-white' : ''}`}>
+                        {choice.kyHieu}
+                      </span>
+                      {choice.noiDung}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="mt-6 flex justify-end">
+        {!submitted ? (
+          <button
+            onClick={() => {
+              // Ensure all questions are answered
+              if (Object.keys(selectedAnswers).length === questions.length) {
+                setSubmitted(true)
+              } else {
+                alert('Vui lòng chọn đáp án cho tất cả câu hỏi!')
+              }
+            }}
+            className="rounded-lg bg-primary px-6 py-2.5 text-sm font-bold text-white transition-colors hover:bg-primary/90"
+          >
+            Kiểm tra đáp án
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              setSubmitted(false)
+              setSelectedAnswers({})
+            }}
+            className="rounded-lg border-2 border-primary bg-transparent px-6 py-2.5 text-sm font-bold text-primary transition-colors hover:bg-primary hover:text-white"
+          >
+            Làm lại
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}

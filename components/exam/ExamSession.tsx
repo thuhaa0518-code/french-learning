@@ -1,0 +1,353 @@
+'use client'
+
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@clerk/nextjs'
+
+interface Answer {
+  id: string
+  noiDung: string
+}
+
+interface Question {
+  id: string
+  noiDung: string
+  thuTu: number
+  answers: Answer[]
+}
+
+interface ExamSessionProps {
+  examId?: string
+  attemptId?: string
+  examTitle: string
+  thoiGianLam: number // minutes
+  questions: Question[]
+}
+
+const LABEL = ['A', 'B', 'C', 'D', 'E', 'F']
+
+export default function ExamSession({ examId, attemptId: initialAttemptId, examTitle, thoiGianLam, questions }: ExamSessionProps) {
+  const router = useRouter()
+  const { getToken } = useAuth()
+  const [attemptId, setAttemptId] = useState<string | null>(initialAttemptId ?? null)
+  const [loadingAttempt, setLoadingAttempt] = useState(!initialAttemptId)
+  const [attemptError, setAttemptError] = useState<string | null>(null)
+
+  const [currentIdx, setCurrentIdx] = useState(0)
+  const [answers, setAnswers] = useState<Record<string, string>>({}) // questionId -> answerId
+  const [flagged, setFlagged] = useState<Set<number>>(new Set())
+  const [remaining, setRemaining] = useState(thoiGianLam * 60)
+  const [submitting, setSubmitting] = useState(false)
+  const submittedRef = useRef(false)
+
+  const currentQ = questions[currentIdx]
+  const totalQ = questions?.length || 0
+
+  useEffect(() => {
+    if (attemptId || !examId) return
+
+    async function initAttempt() {
+      try {
+        const token = await getToken()
+        const res = await fetch('/api/luot-lam', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          credentials: 'include',
+          body: JSON.stringify({ exam_id: examId }),
+        })
+        let data
+        try {
+          data = await res.json()
+        } catch {
+          const text = await res.text()
+          throw new Error(`Máy chủ trả về lỗi (HTTP ${res.status}) không đúng định dạng: ${text.slice(0, 80)}...`)
+        }
+        if (res.ok && data.data?.attempt_id) {
+          setAttemptId(data.data.attempt_id)
+          setLoadingAttempt(false)
+        } else {
+          setAttemptError(data.error?.message || data.message || 'Không thể tạo lượt làm bài')
+          setLoadingAttempt(false)
+        }
+      } catch (err) {
+        setAttemptError(`Lỗi: ${err instanceof Error ? err.message : 'Không thể kết nối máy chủ'}`)
+        setLoadingAttempt(false)
+      }
+    }
+    initAttempt()
+  }, [examId, attemptId])
+
+  const handleSubmit = useCallback(async () => {
+    if (submittedRef.current || submitting || !attemptId) return
+    submittedRef.current = true
+    setSubmitting(true)
+
+    try {
+      const token = await getToken()
+      const cauTraLoi = questions.map((q) => ({
+        questionId: q.id,
+        noiDung: answers[q.id] ?? null,
+      }))
+
+      const res = await fetch(`/api/luot-lam/${attemptId}/nop`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
+        body: JSON.stringify({ cauTraLoi }),
+      })
+
+      if (res.ok) {
+        router.push(`/ket-qua/${attemptId}`)
+      }
+    } catch {
+      submittedRef.current = false
+      setSubmitting(false)
+    }
+  }, [answers, attemptId, getToken, questions, router, submitting])
+
+  // Timer — ref để tránh stale closure khi gọi handleSubmit từ bên trong setRemaining
+  const handleSubmitRef = useRef(handleSubmit)
+  useEffect(() => {
+    handleSubmitRef.current = handleSubmit
+  })
+
+  useEffect(() => {
+    if (loadingAttempt || !attemptId) return
+    const interval = setInterval(() => {
+      setRemaining((r) => {
+        if (r <= 1) {
+          clearInterval(interval)
+          handleSubmitRef.current()
+          return 0
+        }
+        return r - 1
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [loadingAttempt, attemptId])
+
+  const mm = String(Math.floor(remaining / 60)).padStart(2, '0')
+  const ss = String(remaining % 60).padStart(2, '0')
+  const isWarning = remaining < 60
+
+  const handleSelect = (answerId: string) => {
+    if (submittedRef.current) return
+    setAnswers((prev) => ({ ...prev, [currentQ.id]: answerId }))
+  }
+
+  const toggleFlag = () => {
+    setFlagged((prev) => {
+      const next = new Set(prev)
+      if (next.has(currentIdx)) next.delete(currentIdx)
+      else next.add(currentIdx)
+      return next
+    })
+  }
+
+  // Status của từng câu
+  const getStatus = (idx: number): 'answered' | 'current' | 'flagged' | 'unanswered' => {
+    const q = questions[idx]
+    if (flagged.has(idx)) return 'flagged'
+    if (idx === currentIdx) return 'current'
+    if (answers[q.id]) return 'answered'
+    return 'unanswered'
+  }
+
+  const statusStyle = (idx: number) => {
+    const s = getStatus(idx)
+    if (s === 'answered') return 'bg-green-200 text-green-800 border-green-300 font-semibold'
+    if (s === 'current') return 'bg-primary text-white border-primary font-semibold'
+    if (s === 'flagged') return 'bg-yellow-100 text-yellow-700 border-yellow-300 font-semibold'
+    return 'bg-white text-gray-700 border-gray-200'
+  }
+
+  if (loadingAttempt) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-6">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#CB30E0] border-t-transparent" />
+        <p className="mt-4 text-sm font-medium text-gray-500">Đang chuẩn bị đề thi cho bạn...</p>
+      </div>
+    )
+  }
+
+  if (attemptError || !attemptId) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-6">
+        <div className="text-center max-w-md bg-white p-8 rounded-2xl shadow-sm border border-red-100">
+          <div className="text-4xl mb-3">⚠️</div>
+          <h3 className="text-lg font-bold text-gray-800 mb-2">Có lỗi xảy ra</h3>
+          <p className="text-sm text-gray-600 mb-6">{attemptError || 'Không thể tải đề thi.'}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="rounded-xl bg-[#CB30E0] px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:opacity-90"
+          >
+            Thử lại
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="mx-auto max-w-5xl px-6 py-6">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-extrabold text-primary">Đề Thi</h1>
+          <p className="text-sm font-medium text-gray-700">{examTitle}</p>
+        </div>
+
+        {/* Main layout */}
+        <div className="flex gap-5">
+          {/* LEFT — Question card */}
+          <div className="flex-1">
+            <div className="rounded-2xl bg-white p-6 shadow-sm">
+              {/* Question header */}
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-bold uppercase text-gray-500">
+                    Câu {currentIdx + 1}
+                  </span>
+                  <span className="text-xs font-semibold text-primary">
+                    0.5 Điểm
+                  </span>
+                </div>
+                <button
+                  onClick={toggleFlag}
+                  className={`transition-colors ${flagged.has(currentIdx) ? 'text-yellow-500' : 'text-gray-300 hover:text-yellow-400'}`}
+                  title="Đánh dấu câu hỏi"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill={flagged.has(currentIdx) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
+                  </svg>
+                </button>
+              </div>
+
+              {/* Question text */}
+              <p className="mb-5 text-sm font-medium text-gray-800 leading-relaxed">
+                {currentQ.noiDung}
+              </p>
+
+              {/* Answers */}
+              <div className="flex flex-col gap-2.5">
+                {currentQ.answers.map((answer, i) => {
+                  const isSelected = answers[currentQ.id] === answer.id
+                  return (
+                    <button
+                      key={answer.id}
+                      onClick={() => handleSelect(answer.id)}
+                      className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition-all ${
+                        isSelected
+                          ? 'border-green-300 bg-green-50'
+                          : 'border-gray-200 bg-white hover:border-primary/40 hover:bg-purple-50/30'
+                      }`}
+                    >
+                      <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${
+                        isSelected ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {LABEL[i]}
+                      </span>
+                      <span className={`font-medium ${isSelected ? 'text-green-800' : 'text-gray-800'}`}>
+                        {answer.noiDung}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Bottom nav */}
+              <div className="mt-5 flex items-center justify-between">
+                <button className="text-sm text-gray-400 hover:text-primary transition-colors">
+                  Hiển thị đáp án...
+                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCurrentIdx((i) => Math.max(0, i - 1))}
+                    disabled={currentIdx === 0}
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-gray-200 text-gray-600 disabled:opacity-30 hover:border-primary hover:text-primary transition-colors"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    onClick={() => setCurrentIdx((i) => Math.min(totalQ - 1, i + 1))}
+                    disabled={currentIdx === totalQ - 1}
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-gray-200 text-gray-600 disabled:opacity-30 hover:border-primary hover:text-primary transition-colors"
+                  >
+                    ›
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT — Question map + timer */}
+          <div className="w-72 shrink-0">
+            <div className="rounded-2xl bg-white p-5 shadow-sm">
+              {/* Header */}
+              <div className="mb-1 h-1 w-1/3 rounded-full bg-primary" />
+              <div className="mb-4 mt-3 flex items-center justify-between">
+                <span className="text-sm font-semibold text-gray-700">
+                  Câu {currentIdx + 1}/ {totalQ}
+                </span>
+                <span className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold ${isWarning ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-700'}`}>
+                  <span className={`h-2 w-2 rounded-full ${isWarning ? 'bg-red-500 animate-pulse' : 'bg-gray-400'}`} />
+                  {mm}:{ss}
+                </span>
+              </div>
+
+              {/* Grid */}
+              <div className="grid grid-cols-5 gap-1.5 mb-5">
+                {questions.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentIdx(idx)}
+                    className={`flex h-9 w-full items-center justify-center rounded-lg border text-xs transition-all ${statusStyle(idx)}`}
+                  >
+                    {idx + 1}
+                  </button>
+                ))}
+              </div>
+
+              {/* Legend */}
+              <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs text-gray-600">
+                <div className="flex items-center gap-2">
+                  <span className="h-4 w-4 rounded bg-green-200 border border-green-300" />
+                  Đã trả lời
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="h-4 w-4 rounded bg-primary border border-primary" />
+                  Đang làm
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="h-4 w-4 rounded bg-yellow-100 border border-yellow-300" />
+                  Đánh dấu
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="h-4 w-4 rounded bg-white border border-gray-200" />
+                  Chưa làm
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Submit button */}
+        <div className="mt-5 flex justify-end">
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="rounded-xl border-2 border-gray-300 bg-white px-8 py-2.5 text-sm font-semibold text-gray-700 transition-all hover:border-primary hover:text-primary disabled:opacity-50"
+          >
+            {submitting ? 'Đang nộp...' : 'Nộp bài'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

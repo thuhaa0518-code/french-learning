@@ -1,0 +1,94 @@
+{
+  "alternativePhoneCodeProvider": {
+    "resendButton": "Không nhận được mã? Gửi lại",
+    "subtitle": "Nhập mã xác minh đã gửi đến {{provider}}",
+    "title": "Xác minh {{provider}}"
+  },
+  "continue": {
+    "actionLink": "Đăng nhập",
+    "actionText": "Đã có tài khoản?",
+    "subtitle": "Vui lòng điền các chi tiết còn lại để tiếp tục.",
+    "title": "Điền các trường còn thiếu"
+  },
+  "emailCode": {
+    "formSubtitle": "Nhập mã xác minh đã gửi đến email của bạn",
+    "formTitle": "Mã xác minh",
+    "resendButton": "Không nhận được mã? Gửi lại",
+    "subtitle": "Nhập mã xác minh đã gửi đến email của bạn",
+    "title": "Xác minh email"
+  },
+  "emailLink": {
+    "clientMismatch": {
+      "subtitle": "Để tiếp tục, mở liên kết xác minh trên thiết bị và trình duyệt từ đó bạn đã khởi động đăng ký",
+      "title": "Liên kết xác minh không hợp lệ cho thiết bị này"
+    },
+    "formSubtitle": "Sử dụng liên kết xác minh đã gửi đến email của bạn",
+    "formTitle": "Liên kết xác minh",
+    "loading": {
+      "title": "Đang đăng ký..."
+    },
+    "resendButton": "Không nhận được liên kết? Gửi lại",
+    "subtitle": "để tiếp tục đến {{applicationName}}",
+    "title": "Xác minh email",
+    "verified": {
+      "title": "Đăng ký thành công"
+    },
+    "verifiedSwitchTab": {
+      "subtitle": "Quay lại tab mới được mở để tiếp tục",
+      "subtitleNewTab": "Quay lại tab trước để tiếp tục",
+      "title": "Xác minh email thành công"
+    }
+  },
+  "enterpriseConnections": {
+    "subtitle": "Chọn tài khoản doanh nghiệp bạn muốn dùng để tiếp tục.",
+    "title": "Chọn tài khoản doanh nghiệp của bạn"
+  },
+  "legalConsent": {
+    "checkbox": {
+      "label__onlyPrivacyPolicy": "Tôi đồng ý với {{ privacyPolicyLink || link(\"Chính sách bảo mật\") }}",
+      "label__onlyTermsOfService": "Tôi đồng ý với {{ termsOfServiceLink || link(\"Điều khoản dịch vụ\") }}",
+      "label__termsOfServiceAndPrivacyPolicy": "Tôi đồng ý với {{ termsOfServiceLink || link(\"Điều khoản dịch vụ\") }} và {{ privacyPolicyLink || link(\"Chính sách bảo mật\") }}"
+    },
+    "continue": {
+      "subtitle": "Vui lòng đọc và đồng ý với các điều khoản để tiếp tục",
+      "title": "Đồng ý với điều khoản"
+    }
+  },
+  "phoneCode": {
+    "formSubtitle": "Nhập mã xác minh đã gửi đến số điện thoại của bạn",
+    "formTitle": "Mã xác minh",
+    "resendButton": "Không nhận được mã? Gửi lại",
+    "subtitle": "Nhập mã xác minh đã gửi đến số điện thoại của bạn",
+    "title": "Xác minh điện thoại"
+  },
+  "protectCheck": {},
+  "restrictedAccess": {
+    "actionLink": "Đăng nhập",
+    "actionText": "Đã có tài khoản?",
+    "blockButton__emailSupport": "Email hỗ trợ",
+    "blockButton__joinWaitlist": "Tham gia danh sách chờ",
+    "subtitle": "Đăng ký hiện không khả dụng. Nếu bạn tin rằng bạn có quyền truy cập, vui lòng liên hệ hỗ trợ.",
+    "subtitleWaitlist": "Đăng ký hiện không khả dụng. Để biết thông tin sớm nhất khi chúng tôi khởi chạy, hãy tham gia danh sách chờ.",
+    "title": "Quyền truy cập bị giới hạn"
+  },
+  "start": {
+    "actionLink": "Đăng nhập",
+    "actionLink__use_email": "Sử dụng email thay vì",
+    "actionLink__use_phone": "Sử dụng điện thoại thay vì",
+    "actionText": "Đã có tài khoản?",
+    "alternativePhoneCodeProvider": {
+      "actionLink": "Sử dụng phương thức khác",
+      "label": "{{provider}} số điện thoại",
+      "subtitle": "Nhập số điện thoại của bạn để nhận mã xác minh trên {{provider}}.",
+      "title": "Đăng ký vào {{applicationName}} với {{provider}}"
+    },
+    "subtitle": "Chào mừng! Vui lòng điền các chi tiết để bắt đầu.",
+    "subtitleCombined": "Chào mừng! Vui lòng điền các chi tiết để bắt đầu.",
+    "title": "Tạo tài khoản của bạn",
+    "titleCombined": "Tạo tài khoản của bạn"
+  },
+  "web3Solana": {
+    "subtitle": "Chọn ví bên dưới để đăng ký",
+    "title": "Đăng ký với Solana"
+  }
+}
