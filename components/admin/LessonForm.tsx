@@ -25,7 +25,7 @@ interface Section { loai: SectionType; data: SectionData; thuTu: number }
 interface LessonFormProps {
   lessonId?: string
   defaultValues?: {
-    tieuDe: string; moTa: string; level: string; chuDe: string
+    tieuDe: string; moTa?: string; level: string; chuDe: string
     anhBia: string; thoiGianDoc: number; isPublish: boolean; sections: Section[]
   }
 }

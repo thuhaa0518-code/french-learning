@@ -53,7 +53,7 @@ export default async function BaiHocDetailPage({
 
       {/* Sections */}
       <div className="flex flex-col gap-8">
-        {lesson.sections.map((section) => (
+        {lesson.sections.map((section: any) => (
           <SectionRenderer key={section.id} {...section} />
         ))}
       </div>

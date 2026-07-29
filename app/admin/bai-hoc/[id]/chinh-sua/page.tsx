@@ -25,6 +25,7 @@ export default async function ChinhSuaBaiHocPage({
         lessonId={id}
         defaultValues={{
           tieuDe: lesson.tieuDe,
+
           level: lesson.level as 'A1' | 'A2' | 'B1' | 'B2',
           chuDe: lesson.chuDe as 'VOCABULARY' | 'GRAMMAR' | 'LISTENING' | 'READING',
           anhBia: lesson.anhBia ?? '',
