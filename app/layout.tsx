@@ -14,7 +14,7 @@ const exo = Exo({
 })
 
 export const metadata: Metadata = {
-  title: 'FrenchGo — Học tiếng Pháp trực tuyến',
+  title: 'FrenchGo - Học Tiếng Pháp trực tuyến',
   description:
     'Nền tảng học tiếng Pháp cho học sinh và sinh viên Việt Nam. Hỗ trợ cấp độ A1, A2, B1, B2 theo khung CEFR.',
 }

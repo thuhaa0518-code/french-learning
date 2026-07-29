@@ -31,8 +31,8 @@ export default async function ChinhSuaBaiHocPage({
           thoiGianDoc: lesson.thoiGianDoc,
           isPublish: lesson.isPublish,
           sections: lesson.sections.map((s) => ({
-            loai: s.loai as 'TEXT' | 'VOCABULARY' | 'GRAMMAR' | 'VIDEO' | 'MINI_QUIZ' | 'EXERCISE',
-            noiDung: s.noiDung,
+            loai: s.loai as 'TEXT' | 'VOCABULARY' | 'GRAMMAR' | 'VIDEO' | 'MINI_QUIZ',
+            data: s.noiDung ? JSON.parse(s.noiDung) : undefined,
             thuTu: s.thuTu,
           })),
         }}
