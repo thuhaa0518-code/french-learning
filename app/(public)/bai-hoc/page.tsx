@@ -126,7 +126,7 @@ export default async function BaiHocPage({
           />
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {lessons.map((lesson) => (
+            {lessons.map((lesson: any) => (
               <LessonCard key={lesson.id} {...lesson} />
             ))}
           </div>

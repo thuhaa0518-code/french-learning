@@ -1,7 +1,12 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react'
 import { useRouter } from 'next/navigation'
+
+export interface LessonFormHandle {
+  submit: (isPublish: boolean) => Promise<void>
+  handleDelete: () => Promise<void>
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -272,7 +277,7 @@ function BlockWrapper({
 
 // ─── Main form ────────────────────────────────────────────────────────────────
 
-export default function LessonForm({ lessonId, defaultValues }: LessonFormProps) {
+export default forwardRef<LessonFormHandle, LessonFormProps>(function LessonForm({ lessonId, defaultValues }, ref) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -332,6 +337,49 @@ export default function LessonForm({ lessonId, defaultValues }: LessonFormProps)
       setSaving(false)
     }
   }
+
+  useImperativeHandle(ref, () => ({
+    submit: async (isPublish: boolean) => {
+      setSaving(true)
+      setError('')
+      const serializedSections = sections.map((s, i) => ({ loai: s.loai, noiDung: JSON.stringify(s.data), thuTu: i }))
+      const payload = { tieuDe, moTa: moTa || undefined, level, chuDe, anhBia: anhBiaPreview || undefined, thoiGianDoc, isPublish, sections: serializedSections }
+      try {
+        const res = await fetch(lessonId ? `/api/bai-hoc/${lessonId}` : '/api/bai-hoc', {
+          method: lessonId ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        const data = await res.json()
+        if (!res.ok) {
+          throw new Error(data.error?.message || 'Lỗi lưu bài học')
+        }
+        router.push('/admin/bai-hoc')
+        router.refresh()
+      } catch (e: any) {
+        setError(e.message)
+      } finally {
+        setSaving(false)
+      }
+    },
+    handleDelete: async () => {
+      if (!confirm('Bạn có chắc chắn muốn xóa bài học này?')) return
+      setSaving(true)
+      setError('')
+      try {
+        const res = await fetch(`/api/bai-hoc/${lessonId}`, { method: 'DELETE' })
+        if (!res.ok) {
+          const e = await res.json()
+          throw new Error(e.error || 'Lỗi xóa bài học')
+        }
+        router.push('/admin/bai-hoc')
+        router.refresh()
+      } catch (e: any) {
+        setError(e.message)
+        setSaving(false)
+      }
+    }
+  }))
 
   return (
     <form id="lesson-form" onSubmit={handleSubmit}>
@@ -473,4 +521,4 @@ export default function LessonForm({ lessonId, defaultValues }: LessonFormProps)
       </div>
     </form>
   )
-}
+})

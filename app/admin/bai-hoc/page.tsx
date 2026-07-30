@@ -106,15 +106,15 @@ export default async function AdminBaiHocPage({
         </Link>
       </div>
 
-      {/* ── Stats cards ──────────────────────────────────────────────────────── */}
+      {/* -- Stats cards -------------------------------------------------------- */}
       <div className="flex gap-4 w-full">
         <StatCard label="Tổng bài học" value={totalAll} />
         <StatCard label="Đã đăng" value={totalPublished} valueColor="#22c55e" />
         <StatCard label="Bản nháp" value={totalDraft} />
-        <StatCard label="Tổng lượt xem" value="1.2k" valueColor="#3b82f6" />
+        <StatCard label="Tổng lượt xem" value={1200} valueColor="#3b82f6" />
       </div>
 
-      {/* ── Table (client component) ─────────────────────────────────────────── */}
+      {/* -- Table (client component) ------------------------------------------- */}
       <LessonTable
         lessons={lessons}
         total={total}
