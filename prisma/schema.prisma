@@ -4,8 +4,6 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -14,6 +12,7 @@ model User {
   email        String @unique
   tenHienThi   String @map("ten_hien_thi")
   vaiTro       String @default("STUDENT") @map("vai_tro")
+  createdAt    DateTime @default(now()) @map("created_at")
 
   lessonProgresses LessonProgress[]
   examAttempts     ExamAttempt[]
@@ -29,6 +28,7 @@ model Video {
   moTa      String? @map("mo_ta")
   level     String?
   isPublish Boolean @default(false) @map("is_publish")
+  createdAt DateTime @default(now()) @map("created_at")
 
   exams Exam[]
 
@@ -44,6 +44,7 @@ model Lesson {
   anhBia      String? @map("anh_bia")
   thoiGianDoc Int     @default(5) @map("thoi_gian_doc")
   isPublish   Boolean @default(false) @map("is_publish")
+  createdAt   DateTime @default(now()) @map("created_at")
 
   sections   LessonSection[]
   progresses LessonProgress[]
@@ -83,6 +84,7 @@ model FlashcardDeck {
   moTa      String? @map("mo_ta")
   level     String?
   isPublish Boolean @default(false) @map("is_publish")
+  createdAt DateTime @default(now()) @map("created_at")
 
   flashcards Flashcard[]
 
@@ -126,6 +128,7 @@ model Exam {
   level       String
   thoiGianLam Int     @default(45) @map("thoi_gian_lam")
   isPublish   Boolean @default(false) @map("is_publish")
+  createdAt   DateTime @default(now()) @map("created_at")
   videoId     String? @map("video_id")
 
   video     Video?        @relation(fields: [videoId], references: [id], onDelete: SetNull)

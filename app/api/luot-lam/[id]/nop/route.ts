@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { ok, err } from '@/lib/api-response'
 import { requireAuth } from '@/lib/auth'
@@ -6,6 +6,11 @@ import { computeDiemSo } from '@/lib/exam-grader'
 import { SubmitAnswersSchema } from '@/lib/validations/exam'
 
 type Params = { params: Promise<{ id: string }> }
+
+// GET /api/luot-lam/[id]/nop (For debugging)
+export async function GET(req: NextRequest) {
+  return NextResponse.json({ hello: 'world' })
+}
 
 // POST /api/luot-lam/[id]/nop — Student: nộp bài + chấm điểm server-side
 export async function POST(req: NextRequest, { params }: Params) {

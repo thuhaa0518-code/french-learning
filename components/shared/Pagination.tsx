@@ -8,7 +8,8 @@ interface PaginationProps {
 }
 
 export default function Pagination({ currentPage, totalPages, baseUrl, extraParams = '' }: PaginationProps) {
-  if (totalPages <= 1) return null
+  // Always render to allow user to see the design even if there is only 1 page
+  // if (totalPages <= 1) return null
 
   // Tạo danh sách trang hiển thị: 1, 2, ..., n
   const pages: (number | '...')[] = []
@@ -32,29 +33,31 @@ export default function Pagination({ currentPage, totalPages, baseUrl, extraPara
       <Link
         href={makeHref(Math.max(1, currentPage - 1))}
         aria-disabled={currentPage === 1}
-        className={`flex h-8 w-8 items-center justify-center rounded text-sm font-bold transition-all ${
+        className={`flex h-7 w-7 items-center justify-center rounded-[6px] transition-all ${
           currentPage === 1
-            ? 'bg-[#F4E9F1]/50 text-[#D946EF]/50 cursor-not-allowed pointer-events-none'
-            : 'bg-[#F4E9F1] text-[#D946EF] hover:opacity-80'
+            ? 'bg-[#FAEAFF]/50 text-[#C930E0]/50 cursor-not-allowed pointer-events-none'
+            : 'bg-[#FAEAFF] text-[#C930E0] hover:bg-[#f3d9f9]'
         }`}
       >
-        ‹
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
       </Link>
 
       {/* Page numbers */}
       {pages.map((p, idx) =>
         p === '...' ? (
-          <span key={`dots-${idx}`} className="flex h-8 w-8 items-center justify-center text-xs font-medium text-gray-400">
+          <span key={`dots-${idx}`} className="flex h-7 w-5 items-center justify-center text-xs font-semibold text-gray-400">
             ...
           </span>
         ) : (
           <Link
             key={p}
-            href={makeHref(p)}
-            className={`flex h-8 w-8 items-center justify-center rounded text-xs transition-all ${
+            href={makeHref(p as number)}
+            className={`flex h-7 w-6 items-center justify-center text-xs transition-all ${
               p === currentPage
-                ? 'font-semibold text-gray-900'
-                : 'font-medium text-gray-500 hover:bg-gray-100'
+                ? 'font-bold text-gray-900'
+                : 'font-semibold text-gray-500 hover:text-gray-900'
             }`}
           >
             {p}
@@ -66,13 +69,15 @@ export default function Pagination({ currentPage, totalPages, baseUrl, extraPara
       <Link
         href={makeHref(Math.min(totalPages, currentPage + 1))}
         aria-disabled={currentPage === totalPages}
-        className={`flex h-8 w-8 items-center justify-center rounded text-sm font-bold transition-all ${
+        className={`flex h-7 w-7 items-center justify-center rounded-[6px] transition-all ${
           currentPage === totalPages
-            ? 'bg-[#D946EF]/50 text-white cursor-not-allowed pointer-events-none'
-            : 'bg-[#D946EF] text-white hover:opacity-90'
+            ? 'bg-[#C930E0]/50 text-white cursor-not-allowed pointer-events-none'
+            : 'bg-[#C930E0] text-white hover:opacity-90'
         }`}
       >
-        ›
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
       </Link>
     </div>
   )

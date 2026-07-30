@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,7 +17,20 @@ function StatCard({ label, value }: StatCardProps) {
   )
 }
 
-export default async function ThongKePage() {
+export default async function ThongKePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ range?: string }>
+}) {
+  const { range = '30' } = await searchParams
+
+  const dateFilter =
+    range === '7'
+      ? { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
+      : range === '30'
+      ? { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
+      : undefined
+
   const [
     totalUsers,
     flashcardStatesReviewed,
@@ -28,15 +42,15 @@ export default async function ThongKePage() {
     allAttempts,
     topLessons,
   ] = await Promise.all([
-    prisma.user.count(),
-    prisma.flashcardState.count(),
-    prisma.lesson.count({ where: { isPublish: true } }),
-    prisma.exam.count({ where: { isPublish: true } }),
-    prisma.flashcardDeck.count({ where: { isPublish: true } }),
-    prisma.video.count({ where: { isPublish: true } }),
-    prisma.examAttempt.count({ where: { daNop: true } }),
+    prisma.user.count(dateFilter ? { where: { createdAt: dateFilter } } : undefined),
+    prisma.flashcardState.count(dateFilter ? { where: { updatedAt: dateFilter } } : undefined),
+    prisma.lesson.count({ where: { isPublish: true, ...(dateFilter ? { createdAt: dateFilter } : {}) } }),
+    prisma.exam.count({ where: { isPublish: true, ...(dateFilter ? { createdAt: dateFilter } : {}) } }),
+    prisma.flashcardDeck.count({ where: { isPublish: true, ...(dateFilter ? { createdAt: dateFilter } : {}) } }),
+    prisma.video.count({ where: { isPublish: true, ...(dateFilter ? { createdAt: dateFilter } : {}) } }),
+    prisma.examAttempt.count({ where: { daNop: true, ...(dateFilter ? { thoiGianNop: dateFilter } : {}) } }),
     prisma.examAttempt.findMany({
-      where: { daNop: true, diemSo: { not: null } },
+      where: { daNop: true, diemSo: { not: null }, ...(dateFilter ? { thoiGianNop: dateFilter } : {}) },
       select: { diemSo: true },
     }),
     // Top bài học theo số tiến độ (proxy cho lượt xem)
@@ -66,17 +80,22 @@ export default async function ThongKePage() {
           Thống Kê Hệ Thống
         </h1>
         <div className="flex gap-2">
-          {['7 ngày', '30 ngày', 'Tất cả'].map((t) => (
-            <button
-              key={t}
+          {[
+            { label: '7 ngày', value: '7' },
+            { label: '30 ngày', value: '30' },
+            { label: 'Tất cả', value: 'all' },
+          ].map((t) => (
+            <Link
+              key={t.value}
+              href={`/admin/thong-ke?range=${t.value}`}
               className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
-                t === '30 ngày'
+                range === t.value
                   ? 'border-primary bg-primary text-white'
                   : 'border-gray-200 bg-white text-gray-600 hover:border-primary hover:text-primary'
               }`}
             >
-              {t}
-            </button>
+              {t.label}
+            </Link>
           ))}
         </div>
       </div>

@@ -81,10 +81,10 @@ export default async function DeThiPage({
               <Link
                 key={tab}
                 href={href}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium border transition-all ${
+                className={`rounded-full px-5 py-1.5 text-sm font-medium transition-all ${
                   isActive
-                    ? 'bg-primary text-white border-primary'
-                    : 'border-gray-300 text-gray-600 hover:border-primary hover:text-primary bg-white'
+                    ? 'bg-[#FAEAFF] text-[#C930E0]'
+                    : 'border border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600 bg-white'
                 }`}
               >
                 {tab}
@@ -94,29 +94,33 @@ export default async function DeThiPage({
         </div>
 
         {/* Search */}
-        <form method="GET" className="mb-5">
+        <form method="GET" className="mb-6 border-b border-gray-100 pb-6">
           {level && <input type="hidden" name="level" value={level} />}
-          <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 shadow-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          <div className="flex items-center gap-3 rounded-full border border-gray-200 bg-white px-5 py-2.5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
             </svg>
             <input
+              type="text"
               name="search"
               defaultValue={search}
               placeholder="Tìm kiếm đề thi"
-              className="flex-1 text-sm outline-none text-gray-700 placeholder-gray-400"
+              className="flex-1 bg-transparent text-[15px] outline-none placeholder:text-gray-400"
             />
           </div>
         </form>
 
         {/* Meta */}
-        <div className="mb-4 flex items-center justify-between">
-          <p className="text-sm text-gray-500">
+        <div className="mb-6 flex items-center justify-between">
+          <p className="text-[15px] font-medium text-gray-900">
             Hiển thị {start}-{end} / {total} đề thi
           </p>
-          <button className="flex items-center gap-1 text-sm font-medium text-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/>
+          <button className="flex items-center gap-1.5 text-sm font-bold text-[#C930E0]">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M8 9V21" stroke="currentColor" strokeWidth="2.5" strokeDasharray="4 4" strokeLinecap="round" />
+              <path d="M8 3L3.5 9h9z" fill="currentColor" />
+              <path d="M16 3V15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+              <path d="M16 21L11.5 15h9z" fill="currentColor" />
             </svg>
             Mới nhất
           </button>
@@ -131,36 +135,50 @@ export default async function DeThiPage({
               const bestScore = bestScores[exam.id]
               const daDo = bestScore !== undefined
               return (
-                <div key={exam.id} className="flex flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-full bg-[#D946EF] text-sm font-bold text-white shrink-0">
+                <div key={exam.id} className="relative flex flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_2px_12px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-shadow">
+                  {/* Badge positioned absolutely */}
+                  <div className="absolute top-5 left-5 inline-flex items-center justify-center rounded-full bg-[#C930E0] px-3 py-1.5 text-[11px] font-bold text-white shadow-sm">
                     {exam.level}
                   </div>
-                  <h3 className="mb-5 text-[15px] font-bold text-gray-900 line-clamp-2 leading-snug">
+                  <h3 className="mt-8 mb-5 text-[14px] font-bold text-gray-900 line-clamp-2 leading-snug text-center min-h-[40px]">
                     {exam.tieuDe}
                   </h3>
-                  <div className="mb-6 flex flex-wrap items-center gap-4 text-[11px] font-medium text-gray-500">
-                    <span className="flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#D946EF]" />
+                  <div className="mb-6 flex items-center justify-center gap-3 text-[10px] font-medium text-gray-500 whitespace-nowrap">
+                    <span className="flex items-center gap-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" className="text-[#C930E0] shrink-0">
+                        <circle cx="12" cy="12" r="10" fill="currentColor"/>
+                        <polyline points="12 7 12 12 15 15" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                      </svg>
                       {exam.thoiGianLam} Phút
                     </span>
-                    <span className="flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#D946EF]" />
+                    <span className="flex items-center gap-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="11" viewBox="0 0 24 24" fill="currentColor" className="text-[#C930E0] shrink-0">
+                        <path d="M16 3h-1.5A2.5 2.5 0 0 0 12 1a2.5 2.5 0 0 0-2.5 2.5H8A2.5 2.5 0 0 0 5.5 6v14A2.5 2.5 0 0 0 8 22.5h8a2.5 2.5 0 0 0 2.5-2.5V6A2.5 2.5 0 0 0 16 3z" />
+                        <circle cx="12" cy="3.5" r="1.5" fill="white" />
+                        <rect x="8.5" y="9" width="7" height="2" fill="white" rx="1" />
+                        <rect x="8.5" y="13" width="7" height="2" fill="white" rx="1" />
+                        <rect x="8.5" y="17" width="5" height="2" fill="white" rx="1" />
+                      </svg>
                       {exam._count.questions} Câu
                     </span>
                     {daDo ? (
-                      <span className={`flex items-center gap-1.5 ${bestScore >= 60 ? 'text-green-500' : 'text-red-400'}`}>
-                        <span className={`h-1.5 w-1.5 rounded-full ${bestScore >= 60 ? 'bg-green-500' : 'bg-red-400'}`} />
-                        Cao nhất: {bestScore}%
+                      <span className={`flex items-center gap-1 ${bestScore >= 60 ? 'text-[#55BE24]' : 'text-red-500'}`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="shrink-0">
+                          <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9z"/>
+                        </svg>
+                        Đạt {bestScore}%
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1.5 text-gray-400">
-                        <span className="h-1.5 w-1.5 rounded-full bg-gray-300" />
+                      <span className="flex items-center gap-1 text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="shrink-0">
+                          <circle cx="12" cy="12" r="10"/>
+                        </svg>
                         Chưa làm
                       </span>
                     )}
                   </div>
                   <Link href={`/de-thi/${exam.id}`}
-                    className="mt-auto border-t border-gray-100 pt-5 text-center text-[15px] font-bold text-gray-900 transition-opacity hover:opacity-70">
+                    className="mt-auto border-t border-gray-100 pt-5 text-center text-[13px] font-bold text-gray-900 transition-opacity hover:opacity-70">
                     {daDo ? 'Làm Lại' : 'Bắt Đầu'}
                   </Link>
                 </div>

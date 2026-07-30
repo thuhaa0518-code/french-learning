@@ -44,19 +44,22 @@ export default async function KetQuaPage({
     orderBy: { thuTu: 'asc' },
   })
 
-  const chiTiet = attempt.attemptAnswers.map((aa) => {
-    const question = questions.find((q) => q.id === aa.questionId)
-    const correctAnswer = question?.answers.find((a) => a.laDapAnDung)
-    const studentAnswer = question?.answers.find((a) => a.id === aa.cauTraLoi)
+  const chiTiet = attempt.attemptAnswers
+    .map((aa) => {
+      const question = questions.find((q) => q.id === aa.questionId)
+      const correctAnswer = question?.answers.find((a) => a.laDapAnDung)
+      const studentAnswer = question?.answers.find((a) => a.id === aa.cauTraLoi)
 
-    return {
-      questionId: aa.questionId,
-      noiDung: question?.noiDung ?? '',
-      cauTraLoi: studentAnswer?.noiDung ?? null,
-      dapAnDung: correctAnswer?.noiDung ?? '',
-      laDung: aa.laDung,
-    }
-  })
+      return {
+        questionId: aa.questionId,
+        noiDung: question?.noiDung ?? '',
+        cauTraLoi: studentAnswer?.noiDung ?? null,
+        dapAnDung: correctAnswer?.noiDung ?? '',
+        laDung: aa.laDung,
+        thuTu: question?.thuTu ?? 0,
+      }
+    })
+    .sort((a, b) => a.thuTu - b.thuTu)
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
@@ -67,6 +70,7 @@ export default async function KetQuaPage({
         chiTiet={chiTiet}
         examTitle={attempt.exam.tieuDe}
         videoId={attempt.exam.video?.youtubeId}
+        attemptId={attempt.id}
       />
     </div>
   )

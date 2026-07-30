@@ -92,7 +92,8 @@ export default function ExamSession({ examId, attemptId: initialAttemptId, examT
         noiDung: answers[q.id] ?? null,
       }))
 
-      const res = await fetch(`/api/luot-lam/${attemptId}/nop`, {
+      const urlToFetch = `/api/luot-lam/${attemptId}/nop`
+      const res = await fetch(urlToFetch, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -103,9 +104,21 @@ export default function ExamSession({ examId, attemptId: initialAttemptId, examT
       })
 
       if (res.ok) {
+        localStorage.setItem(`flagged_${attemptId}`, JSON.stringify(Array.from(flagged)))
         router.push(`/ket-qua/${attemptId}`)
+      } else {
+        const text = await res.text()
+        console.error(`FETCH FAILED FOR URL: ${urlToFetch} WITH STATUS: ${res.status}`)
+        console.error('SERVER RESPONDED WITH TEXT:', text)
+        let data: any = {}
+        try { data = JSON.parse(text) } catch (e) {}
+        alert(`URL Error: ${urlToFetch}\n\n${data.error?.message || data.message || `Lỗi máy chủ (HTTP ${res.status}): ${text.slice(0, 100)}...`}`)
+        submittedRef.current = false
+        setSubmitting(false)
       }
-    } catch {
+    } catch (err) {
+      console.error(err)
+      alert('Không thể kết nối với máy chủ khi nộp bài')
       submittedRef.current = false
       setSubmitting(false)
     }
@@ -161,10 +174,10 @@ export default function ExamSession({ examId, attemptId: initialAttemptId, examT
 
   const statusStyle = (idx: number) => {
     const s = getStatus(idx)
-    if (s === 'answered') return 'bg-green-200 text-green-800 border-green-300 font-semibold'
-    if (s === 'current') return 'bg-primary text-white border-primary font-semibold'
-    if (s === 'flagged') return 'bg-yellow-100 text-yellow-700 border-yellow-300 font-semibold'
-    return 'bg-white text-gray-700 border-gray-200'
+    if (s === 'answered') return 'bg-green-100 text-green-800 border-green-300 font-semibold'
+    if (s === 'current') return 'bg-[#CB30E0] text-white border-[#CB30E0] font-semibold'
+    if (s === 'flagged') return 'bg-orange-50 text-orange-600 border-orange-200 font-semibold'
+    return 'bg-white text-gray-800 border-gray-200 font-medium'
   }
 
   if (loadingAttempt) {
@@ -211,10 +224,10 @@ export default function ExamSession({ examId, attemptId: initialAttemptId, examT
               {/* Question header */}
               <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold uppercase text-gray-500">
+                  <span className="text-[15px] font-bold uppercase text-gray-500">
                     Câu {currentIdx + 1}
                   </span>
-                  <span className="text-xs font-semibold text-primary">
+                  <span className="text-[15px] font-semibold text-primary">
                     0.5 Điểm
                   </span>
                 </div>
@@ -230,7 +243,7 @@ export default function ExamSession({ examId, attemptId: initialAttemptId, examT
               </div>
 
               {/* Question text */}
-              <p className="mb-5 text-sm font-medium text-gray-800 leading-relaxed">
+              <p className="mb-5 text-[15px] font-medium text-gray-800 leading-relaxed">
                 {currentQ.noiDung}
               </p>
 
@@ -242,14 +255,14 @@ export default function ExamSession({ examId, attemptId: initialAttemptId, examT
                     <button
                       key={answer.id}
                       onClick={() => handleSelect(answer.id)}
-                      className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition-all ${
+                      className={`flex items-center gap-4 rounded-xl border px-4 py-3.5 text-left text-[15px] transition-all shadow-sm ${
                         isSelected
-                          ? 'border-green-300 bg-green-50'
-                          : 'border-gray-200 bg-white hover:border-primary/40 hover:bg-purple-50/30'
+                          ? 'border-green-400 bg-[#dcfce7]'
+                          : 'border-gray-100 bg-white hover:border-gray-300'
                       }`}
                     >
-                      <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${
-                        isSelected ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-600'
+                      <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                        isSelected ? 'bg-[#55BE24] text-white' : 'border border-gray-200 bg-white text-gray-700'
                       }`}>
                         {LABEL[i]}
                       </span>
@@ -263,23 +276,21 @@ export default function ExamSession({ examId, attemptId: initialAttemptId, examT
 
               {/* Bottom nav */}
               <div className="mt-5 flex items-center justify-between">
-                <button className="text-sm text-gray-400 hover:text-primary transition-colors">
-                  Hiển thị đáp án...
-                </button>
-                <div className="flex gap-2">
+                <div />
+                <div className="flex gap-3">
                   <button
                     onClick={() => setCurrentIdx((i) => Math.max(0, i - 1))}
                     disabled={currentIdx === 0}
-                    className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-gray-200 text-gray-600 disabled:opacity-30 hover:border-primary hover:text-primary transition-colors"
+                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 shadow-sm disabled:opacity-30 hover:border-gray-300 transition-colors"
                   >
-                    ‹
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
                   </button>
                   <button
                     onClick={() => setCurrentIdx((i) => Math.min(totalQ - 1, i + 1))}
                     disabled={currentIdx === totalQ - 1}
-                    className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-gray-200 text-gray-600 disabled:opacity-30 hover:border-primary hover:text-primary transition-colors"
+                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 shadow-sm disabled:opacity-30 hover:border-gray-300 transition-colors"
                   >
-                    ›
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                   </button>
                 </div>
               </div>
@@ -295,10 +306,15 @@ export default function ExamSession({ examId, attemptId: initialAttemptId, examT
                 <span className="text-sm font-semibold text-gray-700">
                   Câu {currentIdx + 1}/ {totalQ}
                 </span>
-                <span className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold ${isWarning ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-700'}`}>
-                  <span className={`h-2 w-2 rounded-full ${isWarning ? 'bg-red-500 animate-pulse' : 'bg-gray-400'}`} />
-                  {mm}:{ss}
-                </span>
+                <div className={`flex h-8 items-center gap-2 rounded-lg border px-3 ${isWarning ? 'border-red-200 bg-red-50' : 'border-gray-200 bg-white'}`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="12" fill={isWarning ? '#EF4444' : '#b3b3b3'} />
+                    <polyline points="12 6 12 12 15 15" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span className={`text-[14px] font-medium tracking-wide ${isWarning ? 'text-red-500 animate-pulse' : 'text-gray-500'}`}>
+                    {mm}:{ss}
+                  </span>
+                </div>
               </div>
 
               {/* Grid */}
@@ -315,21 +331,21 @@ export default function ExamSession({ examId, attemptId: initialAttemptId, examT
               </div>
 
               {/* Legend */}
-              <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs text-gray-600">
-                <div className="flex items-center gap-2">
-                  <span className="h-4 w-4 rounded bg-green-200 border border-green-300" />
+              <div className="grid grid-cols-2 gap-x-3 gap-y-3 text-[13px] font-medium text-gray-700">
+                <div className="flex items-center gap-2.5">
+                  <span className="h-5 w-5 rounded-lg bg-[#dcfce7] border border-green-300" />
                   Đã trả lời
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="h-4 w-4 rounded bg-primary border border-primary" />
+                <div className="flex items-center gap-2.5">
+                  <span className="h-5 w-5 rounded-lg bg-[#CB30E0]" />
                   Đang làm
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="h-4 w-4 rounded bg-yellow-100 border border-yellow-300" />
+                <div className="flex items-center gap-2.5">
+                  <span className="h-5 w-5 rounded-lg bg-orange-50 border border-orange-200" />
                   Đánh dấu
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="h-4 w-4 rounded bg-white border border-gray-200" />
+                <div className="flex items-center gap-2.5">
+                  <span className="h-5 w-5 rounded-lg bg-white border border-gray-200" />
                   Chưa làm
                 </div>
               </div>
@@ -342,7 +358,7 @@ export default function ExamSession({ examId, attemptId: initialAttemptId, examT
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="rounded-xl border-2 border-gray-300 bg-white px-8 py-2.5 text-sm font-semibold text-gray-700 transition-all hover:border-primary hover:text-primary disabled:opacity-50"
+            className="rounded-xl border border-[#B3B3B3] bg-white px-8 py-2.5 text-sm font-semibold text-[#252641] transition-all hover:border-primary hover:text-primary disabled:opacity-50"
           >
             {submitting ? 'Đang nộp...' : 'Nộp bài'}
           </button>

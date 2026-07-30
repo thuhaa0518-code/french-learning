@@ -25,7 +25,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <ClerkProvider afterSignOutUrl="/" localization={{
+    <ClerkProvider 
+      afterSignOutUrl="/" 
+      appearance={{ elements: { footer: "hidden", watermark: "hidden" } }}
+      localization={{
       ...viVN,
       formFieldInputPlaceholder__password: 'Tạo một mật khẩu',
       formFieldInputPlaceholder__signUpPassword: 'Tạo một mật khẩu',

@@ -257,29 +257,41 @@ export default async function HomePage() {
 
           <div className="grid grid-cols-3 gap-6">
             {exams.map((exam) => (
-              <div key={exam.id} className="flex flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
-                <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-full bg-[#D946EF] text-sm font-bold text-white">
+              <div key={exam.id} className="relative flex flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_2px_12px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-shadow">
+                {/* Badge positioned absolutely */}
+                <div className="absolute top-5 left-5 inline-flex items-center justify-center rounded-full bg-[#C930E0] px-3 py-1.5 text-[11px] font-bold text-white shadow-sm">
                   {exam.level}
                 </div>
-                <h3 className="mb-5 text-[15px] font-bold text-gray-900 line-clamp-2 leading-snug">
+                <h3 className="mt-8 mb-5 text-[14px] font-bold text-gray-900 line-clamp-2 leading-snug text-center min-h-[40px]">
                   {exam.tieuDe}
                 </h3>
-                <div className="mb-6 flex flex-wrap items-center gap-4 text-[11px] font-medium text-gray-500">
-                  <span className="flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#D946EF]" />
+                <div className="mb-6 flex items-center justify-center gap-3 text-[10px] font-medium text-gray-500 whitespace-nowrap">
+                  <span className="flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" className="text-[#C930E0] shrink-0">
+                      <circle cx="12" cy="12" r="10" fill="currentColor"/>
+                      <polyline points="12 7 12 12 15 15" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                    </svg>
                     {exam.thoiGianLam} Phút
                   </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#D946EF]" />
+                  <span className="flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="11" viewBox="0 0 24 24" fill="currentColor" className="text-[#C930E0] shrink-0">
+                      <path d="M16 3h-1.5A2.5 2.5 0 0 0 12 1a2.5 2.5 0 0 0-2.5 2.5H8A2.5 2.5 0 0 0 5.5 6v14A2.5 2.5 0 0 0 8 22.5h8a2.5 2.5 0 0 0 2.5-2.5V6A2.5 2.5 0 0 0 16 3z" />
+                      <circle cx="12" cy="3.5" r="1.5" fill="white" />
+                      <rect x="8.5" y="9" width="7" height="2" fill="white" rx="1" />
+                      <rect x="8.5" y="13" width="7" height="2" fill="white" rx="1" />
+                      <rect x="8.5" y="17" width="5" height="2" fill="white" rx="1" />
+                    </svg>
                     {exam._count.questions} Câu
                   </span>
-                  <span className="flex items-center gap-1.5 text-green-500">
-                    <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                  <span className="flex items-center gap-1 text-[#55BE24]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="shrink-0">
+                      <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9z"/>
+                    </svg>
                     Đạt 60%
                   </span>
                 </div>
                 <Link href={`/de-thi/${exam.id}`}
-                  className="mt-auto border-t border-gray-100 pt-5 text-center text-[15px] font-bold text-gray-900 transition-opacity hover:opacity-70">
+                  className="mt-auto border-t border-gray-100 pt-5 text-center text-[13px] font-bold text-gray-900 transition-opacity hover:opacity-70">
                   Bắt Đầu
                 </Link>
               </div>

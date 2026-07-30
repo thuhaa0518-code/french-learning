@@ -41,3 +41,15 @@ a[href*="utm_source=clerk"],
   visibility: hidden !important;
   pointer-events: none !important;
 }
+
+/* Aggressive hide for Clerk Watermark in modals */
+div:has(> a[href*="clerk.com"]),
+div:has(> a[href*="clerk.dev"]),
+div:has(> a[href*="clerk.com"]) + div,
+div:has(> a[href*="clerk.dev"]) + div,
+.cl-internal-b3al6g, 
+.cl-internal-1dauvpw,
+.cl-internal-phgxyj,
+.cl-userButtonPopoverFooter {
+  display: none !important;
+}

@@ -114,7 +114,7 @@ export default async function AdminNguoiDungPage({
                 className="appearance-none rounded-xl border border-gray-200 bg-white py-2.5 pl-3 pr-8 text-sm outline-none focus:border-primary cursor-pointer"
               >
                 <option value="">Cấp độ</option>
-                <option value="STUDENT">Student</option>
+                <option value="STUDENT">Học viên</option>
                 <option value="ADMIN">Admin</option>
               </select>
               <svg className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-gray-400" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -233,7 +233,7 @@ export default async function AdminNguoiDungPage({
                           : { backgroundColor: '#F0F9FF', color: '#0369A1' }
                       }
                     >
-                      {selectedUser.vaiTro === 'ADMIN' ? 'Admin' : 'Student'}
+                      {selectedUser.vaiTro === 'ADMIN' ? 'Admin' : 'Học viên'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">

@@ -26,7 +26,9 @@ export default function StudySession({ deck }: StudySessionProps) {
   const [stats, setStats] = useState({ de: 0, kho: 0, lamLai: 0 })
   const [done, setDone] = useState(false)
   const [isShuffled, setIsShuffled] = useState(false)
-  const [shuffledCards, setShuffledCards] = useState<Flashcard[]>([])
+  const [initialCards, setInitialCards] = useState<Flashcard[]>(deck.flashcards)
+  const [reviewQueue, setReviewQueue] = useState<Flashcard[]>([])
+  const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set())
   const [starredIds, setStarredIds] = useState<string[]>([])
 
   useEffect(() => {
@@ -49,16 +51,19 @@ export default function StudySession({ deck }: StudySessionProps) {
   const toggleShuffle = () => {
     if (!isShuffled) {
       const shuffled = [...deck.flashcards].sort(() => Math.random() - 0.5)
-      setShuffledCards(shuffled)
+      setInitialCards(shuffled)
       setIsShuffled(true)
-      setCurrent(0)
     } else {
+      setInitialCards(deck.flashcards)
       setIsShuffled(false)
-      setCurrent(0)
     }
+    setCurrent(0)
+    setReviewQueue([])
+    setReviewedIds(new Set())
+    setDone(false)
   }
 
-  const cards = isShuffled ? shuffledCards : deck.flashcards
+  const cards = [...initialCards, ...reviewQueue]
 
   const handleRate = async (rating: 'De' | 'Kho' | 'Lam_lai') => {
     try {
@@ -75,7 +80,19 @@ export default function StudySession({ deck }: StudySessionProps) {
       lamLai: prev.lamLai + (rating === 'Lam_lai' ? 1 : 0),
     }))
 
-    if (current + 1 >= cards.length) {
+    const currentCard = cards[current]
+    const isStarred = starredIds.includes(currentCard.id)
+    const needsReview = rating === 'Kho' || rating === 'Lam_lai' || isStarred
+    const willAdd = needsReview && !reviewedIds.has(currentCard.id)
+
+    if (willAdd) {
+      setReviewQueue((prev) => [...prev, currentCard])
+      setReviewedIds((prev) => new Set(prev).add(currentCard.id))
+    }
+
+    const nextLength = cards.length + (willAdd ? 1 : 0)
+
+    if (current + 1 >= nextLength) {
       setDone(true)
     } else {
       setCurrent((c) => c + 1)
@@ -109,7 +126,7 @@ export default function StudySession({ deck }: StudySessionProps) {
 
         {/* Card */}
         <FlashcardFlip
-          key={card.id}
+          key={`${card.id}-${current}`}
           tuPhap={card.tuPhap}
           nghiaViet={card.nghiaViet}
           phatAm={card.phatAm}
@@ -132,8 +149,14 @@ export default function StudySession({ deck }: StudySessionProps) {
             ‹
           </button>
           <button
-            onClick={() => setCurrent((c) => Math.min(cards.length - 1, c + 1))}
-            disabled={current === cards.length - 1 || done}
+            onClick={() => {
+              if (current >= cards.length - 1) {
+                setDone(true)
+              } else {
+                setCurrent((c) => c + 1)
+              }
+            }}
+            disabled={done}
             className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-gray-200 text-gray-500 disabled:opacity-30 hover:border-primary hover:text-primary transition-colors"
           >
             ›
@@ -164,26 +187,32 @@ export default function StudySession({ deck }: StudySessionProps) {
               {/* Dễ */}
               <div className="flex flex-col items-center justify-center rounded-2xl border border-green-100 bg-green-50/60 p-5 transition-transform hover:scale-105">
                 <span className="text-3xl font-black text-green-600 mb-1">{stats.de}</span>
-                <span className="text-xs font-semibold text-green-700/80">Dễ thuộc ({Math.round((stats.de / cards.length) * 100) || 0}%)</span>
+                <span className="whitespace-nowrap text-xs font-semibold text-green-700/80">Dễ thuộc ({Math.round((stats.de / cards.length) * 100) || 0}%)</span>
               </div>
 
               {/* Khó */}
               <div className="flex flex-col items-center justify-center rounded-2xl border border-red-100 bg-red-50/60 p-5 transition-transform hover:scale-105">
                 <span className="text-3xl font-black text-red-600 mb-1">{stats.kho}</span>
-                <span className="text-xs font-semibold text-red-700/80">Chưa thuộc ({Math.round((stats.kho / cards.length) * 100) || 0}%)</span>
+                <span className="whitespace-nowrap text-xs font-semibold text-red-700/80">Chưa thuộc ({Math.round((stats.kho / cards.length) * 100) || 0}%)</span>
               </div>
 
               {/* Làm lại */}
               <div className="flex flex-col items-center justify-center rounded-2xl border border-purple-100 bg-purple-50/60 p-5 transition-transform hover:scale-105">
                 <span className="text-3xl font-black text-[#CB30E0] mb-1">{stats.lamLai}</span>
-                <span className="text-xs font-semibold text-purple-700/80">Cần ôn lại ({Math.round((stats.lamLai / cards.length) * 100) || 0}%)</span>
+                <span className="whitespace-nowrap text-xs font-semibold text-purple-700/80">Cần ôn lại ({Math.round((stats.lamLai / cards.length) * 100) || 0}%)</span>
               </div>
             </div>
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3">
               <button
-                onClick={() => { setCurrent(0); setDone(false); setStats({ de: 0, kho: 0, lamLai: 0 }) }}
+                onClick={() => { 
+                  setCurrent(0); 
+                  setDone(false); 
+                  setStats({ de: 0, kho: 0, lamLai: 0 });
+                  setReviewQueue([]);
+                  setReviewedIds(new Set());
+                }}
                 className="flex-1 rounded-2xl bg-[#CB30E0] py-3.5 px-6 text-sm font-bold text-white shadow-lg shadow-[#CB30E0]/30 hover:opacity-90 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
               >
                 Học lại từ đầu

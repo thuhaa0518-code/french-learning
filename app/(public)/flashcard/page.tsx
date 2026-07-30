@@ -60,9 +60,12 @@ export default async function FlashcardPage({
           <p className="text-sm text-gray-500">
             Hiển thị {start}-{end} / {total} flashcard
           </p>
-          <button className="flex items-center gap-1 text-sm font-medium text-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/>
+          <button className="flex items-center gap-1.5 text-sm font-bold text-[#C930E0]">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M8 9V21" stroke="currentColor" strokeWidth="2.5" strokeDasharray="4 4" strokeLinecap="round" />
+              <path d="M8 3L3.5 9h9z" fill="currentColor" />
+              <path d="M16 3V15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+              <path d="M16 21L11.5 15h9z" fill="currentColor" />
             </svg>
             Mới nhất
           </button>
@@ -83,33 +86,42 @@ export default async function FlashcardPage({
               const dotColor = dotColors[idx % 3]
 
               return (
-                <Link key={deck.id} href={`/flashcard/${deck.id}`}
-                  className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm hover:shadow-md transition-shadow">
-                  {/* Image */}
-                  <div className="relative h-44 overflow-hidden bg-gray-100">
+              <Link key={deck.id} href={`/flashcard/${deck.id}`}
+                className="group flex flex-col rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-lg">
+                <div className="relative h-44 w-full p-4 pb-2">
+                  <div className="h-full w-full overflow-hidden rounded-xl bg-gray-100">
                     <img
                       src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&q=70"
                       alt={deck.tieuDe}
-                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                   </div>
-                  {/* Info */}
-                  <div className="p-3">
-                    <h3 className="mb-2 text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-primary transition-colors">
-                      {deck.tieuDe}
-                    </h3>
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="flex items-center gap-1 text-gray-500">
-                        <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />
-                        {deck._count.flashcards} Thẻ
-                      </span>
-                      <span className={`flex items-center gap-1 ${statusColor}`}>
-                        <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
-                        {status}
-                      </span>
+                </div>
+                <div className="flex flex-col p-5 pt-2">
+                  <h3 className="mb-3 text-lg font-bold text-gray-900 transition-colors group-hover:text-[#D946EF] line-clamp-2">
+                    {deck.tieuDe}
+                  </h3>
+                  <div className="mb-4 flex items-center gap-5 text-xs font-medium text-gray-500">
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#D946EF]" />
+                      {deck._count.flashcards} Thẻ
+                    </span>
+                    <span className={`flex items-center gap-1 ${statusColor}`}>
+                      <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
+                      {status}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between border-t border-gray-100 pt-4 mt-auto">
+                    <div className="flex-1 text-center font-bold text-gray-900 pr-10">
+                      Bắt Đầu
+                    </div>
+                    <div className="flex items-center gap-1 text-[11px] font-medium text-gray-400">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D946EF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      251,232
                     </div>
                   </div>
-                </Link>
+                </div>
+              </Link>
               )
             })}
           </div>
