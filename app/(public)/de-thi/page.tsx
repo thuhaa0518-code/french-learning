@@ -39,7 +39,7 @@ export default async function DeThiPage({
   // Lấy điểm cao nhất của user cho từng đề thi đang hiển thị
   const bestScores: Record<string, number> = {}
   if (user && exams.length > 0) {
-    const examIds = exams.map((e) => e.id)
+    const examIds = exams.map((e: any) => e.id)
     const attempts = await prisma.examAttempt.findMany({
       where: {
         userId: user.id,
@@ -131,7 +131,7 @@ export default async function DeThiPage({
           <div className="py-16 text-center text-gray-400">Chưa có đề thi nào</div>
         ) : (
           <div className="grid grid-cols-3 gap-6">
-            {exams.map((exam) => {
+            {exams.map((exam: any) => {
               const bestScore = bestScores[exam.id]
               const daDo = bestScore !== undefined
               return (
