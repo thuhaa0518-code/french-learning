@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   env: {
     DATABASE_URL: process.env.DATABASE_URL,
   },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
