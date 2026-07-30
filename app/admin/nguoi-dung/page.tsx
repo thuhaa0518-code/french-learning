@@ -141,7 +141,7 @@ export default async function AdminNguoiDungPage({
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => (
+                {users.map((user: any) => (
                   <UserListClient
                     key={user.id}
                     user={user}

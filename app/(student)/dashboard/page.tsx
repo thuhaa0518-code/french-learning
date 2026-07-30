@@ -37,17 +37,17 @@ export default async function DashboardPage() {
     prisma.lesson.count({ where: { isPublish: true } }),
   ])
 
-  const completed = progresses.filter((p) => p.daHoanThanh).length
-  const inProgress = progresses.filter((p) => !p.daHoanThanh && p.phanTram > 0).length
+  const completed = progresses.filter((p: any) => p.daHoanThanh).length
+  const inProgress = progresses.filter((p: any) => !p.daHoanThanh && p.phanTram > 0).length
   const notStarted = Math.max(0, totalLessons - progresses.length)
 
   const now = new Date()
-  const dueToday = flashcardStates.filter((s) =>
+  const dueToday = flashcardStates.filter((s: any) =>
     isDueForReview(s.updatedAt, s.soNgayNhacLai, now),
   ).length
 
   const uniqueDecks = new Set(
-    flashcardStates.map((s) => s.flashcardId),
+    flashcardStates.map((s: any) => s.flashcardId),
   ).size
 
   const hasActivity = progresses.length > 0 || attempts.length > 0 || flashcardStates.length > 0
@@ -84,7 +84,7 @@ export default async function DashboardPage() {
               total={totalLessons}
             />
             <ExamHistory
-              attempts={attempts.map((a) => ({
+              attempts={attempts.map((a: any) => ({
                 id: a.id,
                 examTitle: a.exam.tieuDe,
                 diemSo: a.diemSo ?? 0,

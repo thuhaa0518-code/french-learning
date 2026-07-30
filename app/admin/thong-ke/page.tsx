@@ -127,7 +127,7 @@ export default async function ThongKePage({
             {sortedTopLessons.length === 0 ? (
               <p className="text-sm text-gray-400">Chưa có dữ liệu</p>
             ) : (
-              sortedTopLessons.map((lesson, idx) => (
+              sortedTopLessons.map((lesson: any, idx) => (
                 <div key={lesson.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
                     <span
@@ -231,7 +231,7 @@ async function ActivityFeed() {
 
   return (
     <div className="grid grid-cols-3 gap-4">
-      {activities.slice(0, 3).map((act, idx) => (
+      {activities.slice(0, 3).map((act: any, idx) => (
         <div key={idx} className="rounded-xl p-4" style={{ backgroundColor: act.color }}>
           <p className="text-xs font-medium text-gray-700 leading-relaxed">{act.text}</p>
           <p className="mt-2 text-[11px] text-gray-400">{act.time}</p>

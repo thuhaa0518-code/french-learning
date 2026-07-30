@@ -45,7 +45,7 @@ export default async function KetQuaPage({
   })
 
   const chiTiet = attempt.attemptAnswers
-    .map((aa) => {
+    .map((aa: any) => {
       const question = questions.find((q) => q.id === aa.questionId)
       const correctAnswer = question?.answers.find((a) => a.laDapAnDung)
       const studentAnswer = question?.answers.find((a) => a.id === aa.cauTraLoi)
