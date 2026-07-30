@@ -76,7 +76,7 @@ export default async function FlashcardPage({
           <div className="py-16 text-center text-gray-400">Chưa có bộ thẻ nào</div>
         ) : (
           <div className="grid grid-cols-3 gap-5">
-            {decks.map((deck, idx) => {
+            {decks.map((deck: any, idx: number) => {
               // Trạng thái mock dựa trên index (sẽ dùng user progress thực sau)
               const statuses = ['Đã Hoàn Thành', 'Đang Học', 'Chưa Bắt Đầu']
               const statusColors = ['text-[#55BE24]', 'text-[#0088FF]', 'text-[#5B5B5B]']

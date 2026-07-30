@@ -158,7 +158,7 @@ export default async function HomePage() {
 
             {/* Sidebar lessons — 3 cols stacked */}
             <div className="col-span-3 flex flex-col gap-3">
-              {sidebarLessons.map((lesson) => (
+              {sidebarLessons.map((lesson: any) => (
                 <Link key={lesson.id} href={`/bai-hoc/${lesson.slug}`}
                   className="group flex items-center gap-3 rounded-xl border border-gray-100 p-3 hover:border-primary/30 hover:bg-purple-50/40 transition-all">
                   <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-lg shrink-0">{TOPIC_ICONS[lesson.chuDe] ?? '📖'}</span>
@@ -191,7 +191,7 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-2 gap-6">
-            {decks.map((deck) => (
+            {decks.map((deck: any) => (
               <Link key={deck.id} href={`/flashcard/${deck.id}`}
                 className="group flex flex-col rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-lg">
                 <div className="relative h-44 w-full p-4 pb-2">
@@ -256,7 +256,7 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-3 gap-6">
-            {exams.map((exam) => (
+            {exams.map((exam: any) => (
               <div key={exam.id} className="relative flex flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_2px_12px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-shadow">
                 {/* Badge positioned absolutely */}
                 <div className="absolute top-5 left-5 inline-flex items-center justify-center rounded-full bg-[#C930E0] px-3 py-1.5 text-[11px] font-bold text-white shadow-sm">
