@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import Pagination from '@/components/shared/Pagination'
 
-export const revalidate = 300
+export const dynamic = 'force-dynamic'
 
 export default async function FlashcardPage({
   searchParams,

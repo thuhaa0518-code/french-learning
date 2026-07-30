@@ -5,7 +5,7 @@ import SectionRenderer from '@/components/lesson/SectionRenderer'
 import LessonProgressBar from '@/components/lesson/LessonProgressBar'
 import LevelBadge from '@/components/shared/LevelBadge'
 
-export const revalidate = 300
+export const dynamic = 'force-dynamic'
 
 const TOPIC_LABELS: Record<string, string> = {
   VOCABULARY: 'Từ vựng',

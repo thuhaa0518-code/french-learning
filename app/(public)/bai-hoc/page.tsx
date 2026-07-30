@@ -6,7 +6,7 @@ import LessonFilter from '@/components/lesson/LessonFilter'
 import EmptyState from '@/components/shared/EmptyState'
 import Pagination from '@/components/shared/Pagination'
 
-export const revalidate = 300
+export const dynamic = 'force-dynamic'
 
 const LEVELS = ['A1', 'A2', 'B1', 'B2']
 const CHU_DE_LABELS: Record<string, string> = {
