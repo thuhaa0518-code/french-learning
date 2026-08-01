@@ -36,7 +36,7 @@ export default async function AdminDeThiDetailPage({
         </div>
         <div className="flex items-center gap-2">
           <PreviewModal url={`/de-thi/${id}`} title="Preview Đề thi" />
-          <button form="exam-form" name="action" value={exam.isPublish ? 'publish' : 'draft'} type="submit" className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 transition-opacity" style={{ backgroundColor: '#CB30E0' }}>Lưu</button>
+          <button form="exam-form" name="action" value={exam.isPublish ? 'publish' : 'draft'} type="submit" className="rounded-lg px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity" style={{ backgroundColor: '#CB30E0' }}>Lưu</button>
         </div>
       </div>
       <div className="flex-1 overflow-y-auto">

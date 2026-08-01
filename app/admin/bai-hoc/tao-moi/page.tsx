@@ -17,7 +17,7 @@ export default function TaoMoiBaiHocPage() {
           <button
             form="lesson-form"
             type="button"
-            className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-500 hover:bg-red-50 transition-colors"
+            className="rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors"
           >
             Xoá bài học
           </button>
@@ -26,7 +26,7 @@ export default function TaoMoiBaiHocPage() {
             name="action"
             value="draft"
             type="submit"
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
           >
             Lưu bản nháp
           </button>
@@ -35,7 +35,7 @@ export default function TaoMoiBaiHocPage() {
             name="action"
             value="publish"
             type="submit"
-            className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-90"
+            className="rounded-lg px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
             style={{ backgroundColor: '#CB30E0' }}
           >
             Đăng bài

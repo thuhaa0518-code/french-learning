@@ -28,7 +28,7 @@ export default function PreviewModal({ url, title = 'Preview' }: PreviewModalPro
       <button 
         type="button" 
         onClick={() => setIsOpen(true)}
-        className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+        className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
       >
         Preview
       </button>
