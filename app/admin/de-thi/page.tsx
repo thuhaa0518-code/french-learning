@@ -24,7 +24,7 @@ export default async function AdminDeThiPage({
     ...(tab === 'draft' ? { isPublish: false } : {}),
   }
 
-  const [exams, total, totalAll, totalPublished, totalDraft] = await Promise.all([
+  const [exams, total, totalAll, totalPublished, totalDraft, totalAttempts, avgScoreAgg] = await Promise.all([
     prisma.exam.findMany({
       where,
       skip: (page - 1) * PAGE_SIZE,
@@ -36,7 +36,14 @@ export default async function AdminDeThiPage({
     prisma.exam.count(),
     prisma.exam.count({ where: { isPublish: true } }),
     prisma.exam.count({ where: { isPublish: false } }),
+    prisma.examAttempt.count(),
+    prisma.examAttempt.aggregate({
+      _avg: { diemSo: true },
+      where: { daNop: true, diemSo: { not: null } },
+    }),
   ])
+
+  const avgScore = avgScoreAgg._avg.diemSo ? (avgScoreAgg._avg.diemSo).toFixed(1) + '%' : '0%'
 
   return (
     <div className="p-6 space-y-6">
@@ -47,7 +54,7 @@ export default async function AdminDeThiPage({
         </h1>
         <Link
           href="/admin/de-thi/tao-moi"
-          className="inline-flex items-center justify-center gap-1.5 px-8 py-2 text-sm font-extrabold text-white rounded-xl transition-opacity hover:opacity-90 leading-none"
+          className="inline-flex items-center justify-center gap-1.5 px-8 py-2.5 text-[15px] font-extrabold text-white rounded-xl transition-opacity hover:opacity-90 leading-none"
           style={{ backgroundColor: '#CB30E0' }}
         >
           + TẠO MỚI
@@ -60,8 +67,8 @@ export default async function AdminDeThiPage({
           { label: 'Tổng đề thi', value: totalAll },
           { label: 'Đã đăng', value: totalPublished, color: '#22c55e' },
           { label: 'Bản nháp', value: totalDraft },
-          { label: 'Tổng lần làm', value: '1.2k', color: '#3b82f6' },
-          { label: 'Điểm trung bình', value: '67.6%', color: '#f97316' },
+          { label: 'Tổng lần làm', value: totalAttempts, color: '#3b82f6' },
+          { label: 'Điểm trung bình', value: avgScore, color: '#f97316' },
         ].map((s) => (
           <div key={s.label} className="flex flex-col items-center justify-center rounded-[20px] border border-gray-200 bg-white px-6 py-4 min-w-[150px] flex-1">
             <span className="text-2xl font-extrabold" style={{ color: s.color ?? '#111827' }}>{s.value}</span>

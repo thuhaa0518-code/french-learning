@@ -3,6 +3,8 @@
 import React, { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { Modal } from '@/components/ui/Modal'
+import { useToast } from '@/components/ui/ToastProvider'
 
 const PRIMARY = '#CB30E0'
 const PRIMARY_LIGHT = '#FDF0FF'
@@ -14,6 +16,7 @@ export interface ExamRow {
   thoiGianLam: number
   isPublish: boolean
   _count: { questions: number }
+  createdAt: Date
 }
 
 interface Props { exams: ExamRow[]; total: number; page: number; pageSize: number }
@@ -26,9 +29,11 @@ export default function ExamTable({ exams, total, page, pageSize }: Props) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const { toast } = useToast()
 
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<{ type: 'single', id: string } | { type: 'bulk' } | null>(null)
   const [searchInput, setSearchInput] = useState(searchParams.get('q') ?? '')
   const [levelFilter, setLevelFilter] = useState(searchParams.get('level') ?? '')
 
@@ -47,10 +52,25 @@ export default function ExamTable({ exams, total, page, pageSize }: Props) {
   function handleSearch() { router.push(buildUrl({ q: searchInput, level: levelFilter, page: 1 })) }
 
   async function handleDeleteSingle(id: string) {
-    if (!confirm('Xóa đề thi này?')) return
+    setDeleteTarget({ type: 'single', id })
+  }
+
+  async function performDelete() {
+    if (!deleteTarget) return
     setLoading(true)
-    try { await fetch(`/api/de-thi/${id}`, { method: 'DELETE' }); router.refresh() }
-    finally { setLoading(false) }
+    try {
+      if (deleteTarget.type === 'single') {
+        await fetch(`/api/de-thi/${deleteTarget.id}`, { method: 'DELETE' })
+      } else {
+        await Promise.all(Array.from(selected).map(id => fetch(`/api/de-thi/${id}`, { method: 'DELETE' })))
+        setSelected(new Set())
+      }
+      toast('Xóa thành công!', 'success')
+      router.refresh()
+    } finally { 
+      setLoading(false)
+      setDeleteTarget(null)
+    }
   }
 
   async function handleBulkPublish() {
@@ -62,12 +82,7 @@ export default function ExamTable({ exams, total, page, pageSize }: Props) {
   }
 
   async function handleBulkDelete() {
-    if (!confirm(`Xóa ${selected.size} đề thi?`)) return
-    setLoading(true)
-    try {
-      await Promise.all(Array.from(selected).map(id => fetch(`/api/de-thi/${id}`, { method: 'DELETE' })))
-      setSelected(new Set()); router.refresh()
-    } finally { setLoading(false) }
+    setDeleteTarget({ type: 'bulk' })
   }
 
   return (
@@ -134,7 +149,7 @@ export default function ExamTable({ exams, total, page, pageSize }: Props) {
                     {exam.isPublish ? 'Đã đăng' : 'Nháp'}
                   </td>
                   <td className="px-4 py-4 font-medium text-gray-900">1810</td>
-                  <td className="px-4 py-4 font-medium text-gray-900">18/07/2026</td>
+                  <td className="px-4 py-4 font-medium text-gray-900">{new Date(exam.createdAt).toLocaleDateString('vi-VN')}</td>
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-2">
                       <Link href={`/admin/de-thi/${exam.id}`} title="Quản lý câu hỏi" className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors text-gray-600"><IconEdit /></Link>
@@ -183,6 +198,27 @@ export default function ExamTable({ exams, total, page, pageSize }: Props) {
           )}
         </div>
       </div>
+
+      <Modal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="Xác nhận xoá"
+        type="danger"
+        footer={
+          <>
+            <button onClick={() => setDeleteTarget(null)} className="rounded-xl px-5 py-2.5 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100">
+              Huỷ
+            </button>
+            <button onClick={performDelete} disabled={loading} className="rounded-xl bg-red-500 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-red-600 disabled:opacity-50">
+              Xác nhận
+            </button>
+          </>
+        }
+      >
+        <div className="flex flex-col items-center justify-center py-2 text-center">
+          <p className="text-[15px] text-gray-700 font-medium">Bạn chắc chắn muốn xoá?</p>
+        </div>
+      </Modal>
     </div>
   )
 }

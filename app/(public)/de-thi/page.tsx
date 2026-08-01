@@ -12,7 +12,7 @@ export default async function DeThiPage({
 }: {
   searchParams: Promise<{ level?: string; search?: string; page?: string }>
 }) {
-  const { level, search, page: pageStr } = await searchParams
+  const { level, search, page: pageStr, sort = 'desc' } = await searchParams
   const page = Math.max(1, parseInt(pageStr ?? '1'))
   const limit = 9
 
@@ -30,7 +30,7 @@ export default async function DeThiPage({
       where,
       skip: (page - 1) * limit,
       take: limit,
-      orderBy: { tieuDe: 'desc' },
+      orderBy: { createdAt: sort as any },
       include: { _count: { select: { questions: true } } },
     }),
     prisma.exam.count({ where }),
@@ -115,15 +115,18 @@ export default async function DeThiPage({
           <p className="text-[15px] font-medium text-gray-900">
             Hiển thị {start}-{end} / {total} đề thi
           </p>
-          <button className="flex items-center gap-1.5 text-sm font-bold text-[#C930E0]">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <Link
+            href={`/de-thi?${level ? `level=${level}&` : ''}${search ? `search=${search}&` : ''}sort=${sort === 'desc' ? 'asc' : 'desc'}`}
+            className="flex items-center gap-1.5 text-sm font-bold text-[#C930E0] hover:opacity-80 transition-opacity"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ transform: sort === 'asc' ? 'rotate(180deg)' : 'none' }}>
               <path d="M8 9V21" stroke="currentColor" strokeWidth="2.5" strokeDasharray="4 4" strokeLinecap="round" />
               <path d="M8 3L3.5 9h9z" fill="currentColor" />
               <path d="M16 3V15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
               <path d="M16 21L11.5 15h9z" fill="currentColor" />
             </svg>
-            Mới nhất
-          </button>
+            {sort === 'desc' ? 'Mới nhất' : 'Cũ nhất'}
+          </Link>
         </div>
 
         {/* Grid */}
@@ -192,7 +195,7 @@ export default async function DeThiPage({
           currentPage={page}
           totalPages={totalPages}
           baseUrl="/de-thi"
-          extraParams={`${level ? `&level=${level}` : ''}${search ? `&search=${search}` : ''}`}
+          extraParams={`${level ? `&level=${level}` : ''}${search ? `&search=${search}` : ''}&sort=${sort}`}
         />
 
       </div>

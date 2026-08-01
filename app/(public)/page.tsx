@@ -1,19 +1,59 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { prisma } from '@/lib/prisma'
-
+import { getCurrentUser } from '@/lib/auth'
+import CarouselWrapper from '@/components/home/CarouselWrapper'
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
   // Fetch data
-  const [lessons, decks, exams] = await Promise.all([
-    prisma.lesson.findMany({ where: { isPublish: true }, take: 4, orderBy: { tieuDe: 'asc' } }),
-    prisma.flashcardDeck.findMany({ where: { isPublish: true }, take: 2, orderBy: { tieuDe: 'asc' }, include: { _count: { select: { flashcards: true } } } }),
-    prisma.exam.findMany({ where: { isPublish: true }, take: 3, orderBy: { tieuDe: 'asc' }, include: { _count: { select: { questions: true } } } }),
+  const [allLessons, decks, exams, user] = await Promise.all([
+    prisma.lesson.findMany({ where: { isPublish: true }, take: 20, orderBy: { createdAt: 'desc' } }),
+    prisma.flashcardDeck.findMany({ where: { isPublish: true }, take: 10, orderBy: { createdAt: 'desc' }, include: { _count: { select: { flashcards: true } } } }),
+    prisma.exam.findMany({ where: { isPublish: true }, take: 10, orderBy: { createdAt: 'desc' }, include: { _count: { select: { questions: true } } } }),
+    getCurrentUser(),
   ])
 
-  const featuredLesson = lessons[0]
-  const sidebarLessons = lessons.slice(1)
+  // Lấy điểm cao nhất của user cho từng đề thi đang hiển thị trên trang chủ
+  const bestScores: Record<string, number> = {}
+  if (user && exams.length > 0) {
+    const examIds = exams.map((e: any) => e.id)
+    const attempts = await prisma.examAttempt.findMany({
+      where: {
+        userId: user.id,
+        examId: { in: examIds },
+        daNop: true,
+        diemSo: { not: null },
+      },
+      select: { examId: true, diemSo: true },
+    })
+    for (const a of attempts) {
+      if (a.diemSo !== null) {
+        if (bestScores[a.examId] === undefined || a.diemSo > bestScores[a.examId]) {
+          bestScores[a.examId] = Math.round(a.diemSo)
+        }
+      }
+    }
+  }
+
+  // Get distinct topics for variety
+  const featuredLesson = allLessons[0]
+  const sidebarLessons: typeof allLessons = []
+  const seenTopics = new Set(featuredLesson ? [featuredLesson.chuDe] : [])
+  
+  for (let i = 1; i < allLessons.length; i++) {
+    if (!seenTopics.has(allLessons[i].chuDe)) {
+      sidebarLessons.push(allLessons[i])
+      seenTopics.add(allLessons[i].chuDe)
+    }
+    if (sidebarLessons.length === 3) break
+  }
+  // Fill with whatever if not enough distinct topics
+  for (let i = 1; i < allLessons.length && sidebarLessons.length < 3; i++) {
+    if (!sidebarLessons.find(l => l.id === allLessons[i].id)) {
+      sidebarLessons.push(allLessons[i])
+    }
+  }
 
   const TOPIC_ICONS: Record<string, React.ReactNode> = {
     VOCABULARY: (
@@ -128,16 +168,16 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mb-5 flex items-center justify-between">
             <h2 className="text-lg font-bold text-primary uppercase tracking-wide">Bài học nổi bật</h2>
-            <Link href="/bai-hoc" className="text-xs font-medium text-primary hover:underline">
+            <Link href="/bai-hoc" className="text-sm font-bold text-primary hover:underline">
               Xem tất cả
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 gap-5 lg:grid-cols-5">
-            {/* Featured card — 2 cols */}
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-5">
+            {/* Featured card — 3 cols */}
             {featuredLesson && (
               <Link href={`/bai-hoc/${featuredLesson.slug}`}
-                className="group col-span-2 rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                className="group col-span-1 lg:col-span-3 rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                 <div className="relative h-48 bg-gray-100">
                   {featuredLesson.anhBia ? (
                     <img src={featuredLesson.anhBia} alt={featuredLesson.tieuDe} className="h-full w-full object-cover" />
@@ -156,14 +196,14 @@ export default async function HomePage() {
               </Link>
             )}
 
-            {/* Sidebar lessons — 3 cols stacked */}
-            <div className="col-span-3 flex flex-col gap-3">
+            {/* Sidebar lessons — 2 cols stacked */}
+            <div className="col-span-1 lg:col-span-2 flex flex-col justify-between gap-3">
               {sidebarLessons.map((lesson: any) => (
                 <Link key={lesson.id} href={`/bai-hoc/${lesson.slug}`}
                   className="group flex items-center gap-3 rounded-xl border border-gray-100 p-3 hover:border-primary/30 hover:bg-purple-50/40 transition-all">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-lg shrink-0">{TOPIC_ICONS[lesson.chuDe] ?? '📖'}</span>
+                  <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-50 text-xl shrink-0">{TOPIC_ICONS[lesson.chuDe] ?? '📖'}</span>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900 group-hover:text-primary transition-colors line-clamp-1">
+                    <p className="text-[15px] font-semibold text-gray-900 group-hover:text-primary transition-colors line-clamp-1">
                       {lesson.tieuDe}
                     </p>
                     <p className="text-xs text-gray-400">{TOPIC_LABELS[lesson.chuDe] ?? lesson.chuDe}</p>
@@ -190,10 +230,19 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
-            {decks.map((deck: any) => (
+          <CarouselWrapper>
+            {decks.map((deck: any, idx: number) => {
+              // Sync mock status with flashcard list
+              const statuses = ['Đã Hoàn Thành', 'Đang Học', 'Chưa Bắt Đầu']
+              const statusColors = ['text-[#55BE24]', 'text-[#0088FF]', 'text-[#5B5B5B]']
+              const dotColors = ['bg-[#55BE24]', 'bg-[#0088FF]', 'bg-[#5B5B5B]']
+              const status = statuses[idx % 3]
+              const statusColor = statusColors[idx % 3]
+              const dotColor = dotColors[idx % 3]
+              
+              return (
               <Link key={deck.id} href={`/flashcard/${deck.id}`}
-                className="group flex flex-col rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-lg">
+                className="group flex shrink-0 w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] min-w-[280px] flex-col rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-lg">
                 <div className="relative h-44 w-full p-4 pb-2">
                   <div className="h-full w-full overflow-hidden rounded-xl bg-gray-100">
                     <img
@@ -212,9 +261,9 @@ export default async function HomePage() {
                       <span className="h-1.5 w-1.5 rounded-full bg-[#D946EF]" />
                       {deck._count.flashcards} Thẻ
                     </span>
-                    <span className="flex items-center gap-1.5 text-green-500">
-                      <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                      Đã Hoàn Thành
+                    <span className={`flex items-center gap-1 ${statusColor}`}>
+                      <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
+                      {status}
                     </span>
                   </div>
                   <div className="flex items-center justify-between border-t border-gray-100 pt-4 mt-auto">
@@ -223,25 +272,16 @@ export default async function HomePage() {
                     </div>
                     <div className="flex items-center gap-1 text-[11px] font-medium text-gray-400">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D946EF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                      251,232
+                      {deck.id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0) % 500 + 10}
                     </div>
                   </div>
                 </div>
               </Link>
-            ))}
+            )})}
             {decks.length === 0 && (
-              <div className="col-span-2 py-8 text-center text-sm text-gray-400">Chưa có bộ thẻ</div>
+              <div className="w-full py-8 text-center text-sm text-gray-400">Chưa có bộ thẻ</div>
             )}
-          </div>
-
-          {/* Pagination */}
-          <div className="mt-8 flex justify-end gap-1.5">
-            <span className="flex h-6 w-6 items-center justify-center rounded bg-[#F4E9F1] text-xs font-bold text-[#D946EF]">‹</span>
-            <span className="flex h-6 w-6 items-center justify-center rounded text-xs font-semibold text-gray-900">1</span>
-            <Link href="/flashcard?page=2" className="flex h-6 w-6 items-center justify-center rounded text-xs font-medium text-gray-500 hover:bg-gray-100">2</Link>
-            <span className="flex h-6 w-6 items-center justify-center text-xs text-gray-400">...</span>
-            <Link href="/flashcard" className="flex h-6 w-6 items-center justify-center rounded bg-[#D946EF] text-xs font-bold text-white hover:opacity-90">›</Link>
-          </div>
+          </CarouselWrapper>
         </div>
       </section>
 
@@ -255,9 +295,13 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-3 gap-6">
-            {exams.map((exam: any) => (
-              <div key={exam.id} className="relative flex flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_2px_12px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-shadow">
+          <CarouselWrapper>
+            {exams.map((exam: any) => {
+              const bestScore = bestScores[exam.id]
+              const daDo = bestScore !== undefined
+              
+              return (
+              <div key={exam.id} className="relative flex shrink-0 w-[calc(33.333%-16px)] min-w-[280px] flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_2px_12px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-shadow">
                 {/* Badge positioned absolutely */}
                 <div className="absolute top-5 left-5 inline-flex items-center justify-center rounded-full bg-[#C930E0] px-3 py-1.5 text-[11px] font-bold text-white shadow-sm">
                   {exam.level}
@@ -283,32 +327,33 @@ export default async function HomePage() {
                     </svg>
                     {exam._count.questions} Câu
                   </span>
-                  <span className="flex items-center gap-1 text-[#55BE24]">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="shrink-0">
-                      <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9z"/>
-                    </svg>
-                    Đạt 60%
-                  </span>
+                  {daDo ? (
+                    <span className={`flex items-center gap-1 ${bestScore >= 60 ? 'text-[#55BE24]' : 'text-red-500'}`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="shrink-0">
+                        <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9z"/>
+                      </svg>
+                      Đạt {bestScore}%
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-gray-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="shrink-0">
+                        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2"/>
+                        <path d="M12 8v4l3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                      Chưa làm
+                    </span>
+                  )}
                 </div>
                 <Link href={`/de-thi/${exam.id}`}
                   className="mt-auto border-t border-gray-100 pt-5 text-center text-[13px] font-bold text-gray-900 transition-opacity hover:opacity-70">
-                  Bắt Đầu
+                  {daDo ? 'Làm Lại' : 'Bắt Đầu'}
                 </Link>
               </div>
-            ))}
+            )})}
             {exams.length === 0 && (
-              <div className="col-span-3 py-8 text-center text-sm text-gray-400">Chưa có đề thi</div>
+              <div className="w-full py-8 text-center text-sm text-gray-400">Chưa có đề thi</div>
             )}
-          </div>
-
-          {/* Pagination trang chủ — mini */}
-          <div className="mt-8 flex justify-end gap-1.5">
-            <span className="flex h-6 w-6 items-center justify-center rounded bg-[#F4E9F1] text-xs font-bold text-[#D946EF]">‹</span>
-            <span className="flex h-6 w-6 items-center justify-center rounded text-xs font-semibold text-gray-900">1</span>
-            <Link href="/de-thi?page=2" className="flex h-6 w-6 items-center justify-center rounded text-xs font-medium text-gray-500 hover:bg-gray-100">2</Link>
-            <span className="flex h-6 w-6 items-center justify-center text-xs text-gray-400">...</span>
-            <Link href="/de-thi" className="flex h-6 w-6 items-center justify-center rounded bg-[#D946EF] text-xs font-bold text-white hover:opacity-90">›</Link>
-          </div>
+          </CarouselWrapper>
         </div>
       </section>
 

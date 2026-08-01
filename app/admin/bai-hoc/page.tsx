@@ -58,7 +58,7 @@ export default async function AdminBaiHocPage({
   }
 
   // ── Fetch data (parallel) ─────────────────────────────────────────────────
-  const [lessons, total, totalAll, totalPublished, totalDraft, distinctLevels, distinctChuDe] =
+  const [lessons, total, totalAll, totalPublished, totalDraft, distinctLevels, distinctChuDe, totalViews] =
     await Promise.all([
       prisma.lesson.findMany({
         where,
@@ -81,6 +81,7 @@ export default async function AdminBaiHocPage({
         distinct: ['chuDe'],
         orderBy: { chuDe: 'asc' },
       }),
+      prisma.lessonProgress.count(),
     ])
 
   const levels = distinctLevels.map((l) => l.level)
@@ -99,7 +100,7 @@ export default async function AdminBaiHocPage({
         </h1>
         <Link
           href="/admin/bai-hoc/tao-moi"
-          className="inline-flex items-center justify-center px-8 py-2 text-sm font-extrabold text-white rounded-xl transition-opacity hover:opacity-90 leading-none"
+          className="inline-flex items-center justify-center px-8 py-2.5 text-[15px] font-extrabold text-white rounded-xl transition-opacity hover:opacity-90 leading-none"
           style={{ backgroundColor: PRIMARY }}
         >
           + TẠO MỚI
@@ -111,7 +112,7 @@ export default async function AdminBaiHocPage({
         <StatCard label="Tổng bài học" value={totalAll} />
         <StatCard label="Đã đăng" value={totalPublished} valueColor="#22c55e" />
         <StatCard label="Bản nháp" value={totalDraft} />
-        <StatCard label="Tổng lượt xem" value={1200} valueColor="#3b82f6" />
+        <StatCard label="Tổng lượt học" value={totalViews} valueColor="#3b82f6" />
       </div>
 
       {/* -- Table (client component) ------------------------------------------- */}

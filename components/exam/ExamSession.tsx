@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@clerk/nextjs'
+import { Modal } from '@/components/ui/Modal'
+import { useToast } from '@/components/ui/ToastProvider'
 
 interface Answer {
   id: string
@@ -39,6 +41,10 @@ export default function ExamSession({ examId, attemptId: initialAttemptId, examT
   const [remaining, setRemaining] = useState(thoiGianLam * 60)
   const [submitting, setSubmitting] = useState(false)
   const submittedRef = useRef(false)
+  const { toast } = useToast()
+
+  const [showSubmitModal, setShowSubmitModal] = useState(false)
+  const [showTimeoutModal, setShowTimeoutModal] = useState(false)
 
   const currentQ = questions[currentIdx]
   const totalQ = questions?.length || 0
@@ -80,54 +86,66 @@ export default function ExamSession({ examId, attemptId: initialAttemptId, examT
     initAttempt()
   }, [examId, attemptId])
 
-  const handleSubmit = useCallback(async () => {
+  const confirmSubmit = useCallback(async () => {
     if (submittedRef.current || submitting || !attemptId) return
     submittedRef.current = true
+    setShowSubmitModal(false)
     setSubmitting(true)
 
-    try {
-      const token = await getToken()
-      const cauTraLoi = questions.map((q) => ({
-        questionId: q.id,
-        noiDung: answers[q.id] ?? null,
-      }))
+    const MAX_RETRIES = 5;
+    let attempt = 0;
 
-      const urlToFetch = `/api/luot-lam/${attemptId}/nop`
-      const res = await fetch(urlToFetch, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
-        body: JSON.stringify({ cauTraLoi }),
-      })
+    const cauTraLoi = questions.map((q) => ({
+      questionId: q.id,
+      noiDung: answers[q.id] ?? null,
+    }))
+    const urlToFetch = `/api/luot-lam/${attemptId}/nop`
 
-      if (res.ok) {
-        localStorage.setItem(`flagged_${attemptId}`, JSON.stringify(Array.from(flagged)))
-        router.push(`/ket-qua/${attemptId}`)
-      } else {
-        const text = await res.text()
-        console.error(`FETCH FAILED FOR URL: ${urlToFetch} WITH STATUS: ${res.status}`)
-        console.error('SERVER RESPONDED WITH TEXT:', text)
-        let data: any = {}
-        try { data = JSON.parse(text) } catch (e) {}
-        alert(`URL Error: ${urlToFetch}\n\n${data.error?.message || data.message || `Lỗi máy chủ (HTTP ${res.status}): ${text.slice(0, 100)}...`}`)
-        submittedRef.current = false
-        setSubmitting(false)
+    while (attempt <= MAX_RETRIES) {
+      try {
+        const token = await getToken()
+        const res = await fetch(urlToFetch, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          credentials: 'include',
+          body: JSON.stringify({ cauTraLoi }),
+        })
+
+        if (res.ok) {
+          localStorage.setItem(`flagged_${attemptId}`, JSON.stringify(Array.from(flagged)))
+          router.push(`/ket-qua/${attemptId}`)
+          return; // Success
+        } else {
+          const text = await res.text()
+          console.error(`FETCH FAILED FOR URL: ${urlToFetch} WITH STATUS: ${res.status}`)
+          console.error('SERVER RESPONDED WITH TEXT:', text)
+          throw new Error('Server returned non-200 status')
+        }
+      } catch (err) {
+        attempt++
+        if (attempt <= MAX_RETRIES) {
+          toast(`Không thể nộp bài — đang thử lại... (${attempt}/${MAX_RETRIES})`, 'loading')
+          await new Promise(resolve => setTimeout(resolve, 2000))
+        } else {
+          toast('Lỗi khi nộp bài — vui lòng kiểm tra kết nối', 'error')
+          submittedRef.current = false
+          setSubmitting(false)
+        }
       }
-    } catch (err) {
-      console.error(err)
-      alert('Không thể kết nối với máy chủ khi nộp bài')
-      submittedRef.current = false
-      setSubmitting(false)
     }
-  }, [answers, attemptId, getToken, questions, router, submitting])
+  }, [answers, attemptId, getToken, questions, router, submitting, toast, flagged])
 
-  // Timer — ref để tránh stale closure khi gọi handleSubmit từ bên trong setRemaining
-  const handleSubmitRef = useRef(handleSubmit)
+  const handlePressSubmit = () => {
+    setShowSubmitModal(true)
+  }
+
+  // Timer — ref để tránh stale closure khi gọi confirmSubmit từ bên trong setRemaining
+  const confirmSubmitRef = useRef(confirmSubmit)
   useEffect(() => {
-    handleSubmitRef.current = handleSubmit
+    confirmSubmitRef.current = confirmSubmit
   })
 
   useEffect(() => {
@@ -136,7 +154,9 @@ export default function ExamSession({ examId, attemptId: initialAttemptId, examT
       setRemaining((r) => {
         if (r <= 1) {
           clearInterval(interval)
-          handleSubmitRef.current()
+          toast('Hết thời gian — Tự động nộp bài', 'error')
+          setShowTimeoutModal(true)
+          confirmSubmitRef.current()
           return 0
         }
         return r - 1
@@ -356,7 +376,7 @@ export default function ExamSession({ examId, attemptId: initialAttemptId, examT
         {/* Submit button */}
         <div className="mt-5 flex justify-end">
           <button
-            onClick={handleSubmit}
+            onClick={handlePressSubmit}
             disabled={submitting}
             className="rounded-xl border border-[#B3B3B3] bg-white px-8 py-2.5 text-sm font-semibold text-[#252641] transition-all hover:border-primary hover:text-primary disabled:opacity-50"
           >
@@ -364,6 +384,66 @@ export default function ExamSession({ examId, attemptId: initialAttemptId, examT
           </button>
         </div>
       </div>
+
+      {/* MODALS */}
+      {(() => {
+        const answeredCount = Object.keys(answers).length
+        const unansweredCount = totalQ - answeredCount
+        const isComplete = unansweredCount === 0
+
+        return (
+          <Modal 
+            isOpen={showSubmitModal} 
+            onClose={() => setShowSubmitModal(false)}
+            title={isComplete ? "Xác nhận nộp bài" : "Chưa hoàn thành"}
+            type={isComplete ? 'default' : 'danger'}
+            footer={
+              <>
+                <button onClick={() => setShowSubmitModal(false)} className="rounded-xl px-5 py-2.5 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100">
+                  Quay lại làm bài
+                </button>
+                <button 
+                  onClick={confirmSubmit} 
+                  className={`rounded-xl px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all ${
+                    isComplete ? 'bg-[#C930E0] hover:opacity-90' : 'bg-red-500 hover:bg-red-600'
+                  }`}
+                >
+                  {isComplete ? 'Nộp bài' : 'Vẫn nộp bài'}
+                </button>
+              </>
+            }
+          >
+            {isComplete ? (
+              <div className="flex flex-col items-center justify-center py-2 text-center">
+                <p className="mb-2 text-lg font-bold text-gray-900">{answeredCount} / {totalQ} câu</p>
+                <p className="text-gray-500">Bạn đã hoàn thành tất cả các câu hỏi trong đề thi này. Bạn có chắc chắn muốn nộp bài ngay?</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-2 text-center">
+                <p className="text-[15px] text-gray-700 font-medium">Bạn còn <span className="text-red-500 font-bold">{unansweredCount}</span> câu chưa trả lời. Xác nhận nộp bài?</p>
+              </div>
+            )}
+          </Modal>
+        )
+      })()}
+
+      <Modal 
+        isOpen={showTimeoutModal} 
+        onClose={() => setShowTimeoutModal(false)}
+        title="Hết thời gian"
+        type="danger"
+        footer={
+          <button onClick={() => setShowTimeoutModal(false)} className="w-full rounded-xl bg-[#C930E0] px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:opacity-90">
+            Xem kết quả
+          </button>
+        }
+      >
+        <div className="flex flex-col items-center justify-center py-2 text-center">
+          <p className="mb-2 text-lg font-bold text-gray-900">Thời gian làm bài đã kết thúc</p>
+          <p className="text-gray-500">Hệ thống đã tự động lưu và nộp bài thi của bạn.</p>
+        </div>
+      </Modal>
+
     </div>
   )
 }

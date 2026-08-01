@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useToast } from '@/components/ui/ToastProvider'
 
 interface FlashcardFlipProps {
   tuPhap: string
@@ -16,12 +17,15 @@ interface FlashcardFlipProps {
 }
 
 export default function FlashcardFlip({ tuPhap, nghiaViet, phatAm, viDu, audioUrl, onRate, isShuffled, onToggleShuffle, isStarred, onToggleStar }: FlashcardFlipProps) {
+  const { toast } = useToast()
   const [flipped, setFlipped] = useState(false)
 
   const playAudio = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (!audioUrl) return
-    new Audio(audioUrl).play().catch(() => {})
+    new Audio(audioUrl).play().catch(() => {
+      toast('Audio không tải được', 'error')
+    })
   }
 
   return (

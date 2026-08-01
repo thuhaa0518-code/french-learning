@@ -79,24 +79,27 @@ export default async function ThongKePage({
         <h1 className="text-2xl font-extrabold uppercase tracking-wide" style={{ color: '#CB30E0' }}>
           Thống Kê Hệ Thống
         </h1>
-        <div className="flex gap-2">
+        <div className="flex items-center rounded-full bg-[#F4F4F6] p-1.5 border border-gray-100 shadow-inner">
           {[
             { label: '7 ngày', value: '7' },
             { label: '30 ngày', value: '30' },
             { label: 'Tất cả', value: 'all' },
-          ].map((t) => (
-            <Link
-              key={t.value}
-              href={`/admin/thong-ke?range=${t.value}`}
-              className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
-                range === t.value
-                  ? 'border-primary bg-primary text-white'
-                  : 'border-gray-200 bg-white text-gray-600 hover:border-primary hover:text-primary'
-              }`}
-            >
-              {t.label}
-            </Link>
-          ))}
+          ].map((t) => {
+            const isActive = range === t.value
+            return (
+              <Link
+                key={t.value}
+                href={`/admin/thong-ke?range=${t.value}`}
+                className={`rounded-full px-6 py-2 text-sm font-bold transition-all ${
+                  isActive
+                    ? 'bg-white text-[#CB30E0] shadow-[0_2px_8px_rgba(0,0,0,0.06)]'
+                    : 'text-gray-800 hover:text-black'
+                }`}
+              >
+                {t.label}
+              </Link>
+            )
+          })}
         </div>
       </div>
 
@@ -163,7 +166,7 @@ export default async function ThongKePage({
         </div>
 
         {/* Thống kê kết quả thi */}
-        <div className="w-56 shrink-0 rounded-2xl border border-gray-200 bg-white p-6">
+        <div className="w-80 shrink-0 rounded-2xl border border-gray-200 bg-white p-6">
           <p className="mb-4 text-sm font-semibold text-gray-800">Thống kê kết quả thi</p>
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">

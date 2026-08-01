@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-interface CardRow { tuPhap: string; phatAm: string; nghiaViet: string; viDu: string }
+interface CardRow { tuPhap: string; phatAm: string; nghiaViet: string; viDu: string; audioFile?: File | string }
 
 const INPUT = 'w-full rounded-lg border border-gray-200 px-3 py-2 text-[15px] outline-none focus:border-primary focus:ring-1 focus:ring-primary/30'
 
@@ -13,6 +13,7 @@ export default function FlashcardDeckForm({ deckId, defaultValues }: Props) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [cardErrors, setCardErrors] = useState<Record<number, { tuPhap?: string, nghiaViet?: string, audio?: string }>>({})
 
   const [tieuDe, setTieuDe] = useState(defaultValues?.tieuDe ?? '')
   const [moTa, setMoTa] = useState(defaultValues?.moTa ?? '')
@@ -27,6 +28,27 @@ export default function FlashcardDeckForm({ deckId, defaultValues }: Props) {
     e.preventDefault()
     const action = (e.nativeEvent as SubmitEvent).submitter
     const isPublish = (action as HTMLButtonElement)?.value === 'publish'
+    
+    // Inline validation
+    let hasError = false
+    const errors: Record<number, { tuPhap?: string, nghiaViet?: string, audio?: string }> = {}
+
+    cards.forEach((card, i) => {
+      const err: { tuPhap?: string, nghiaViet?: string, audio?: string } = {}
+      if (!card.tuPhap.trim()) { err.tuPhap = 'Vui lòng nhập từ tiếng Pháp'; hasError = true }
+      if (!card.nghiaViet.trim()) { err.nghiaViet = 'Vui lòng nhập nghĩa tiếng Việt'; hasError = true }
+      if (card.audioFile instanceof File && card.audioFile.size > 5 * 1024 * 1024) {
+        err.audio = 'File audio vượt quá 5MB'
+        hasError = true
+      }
+      if (Object.keys(err).length > 0) { errors[i] = err }
+    })
+
+    if (hasError) {
+      setCardErrors(errors)
+      return
+    }
+
     setSaving(true); setError('')
 
     try {
@@ -130,7 +152,8 @@ export default function FlashcardDeckForm({ deckId, defaultValues }: Props) {
                     <div className="grid grid-cols-3 gap-2">
                       <div>
                         <label className="mb-1 block text-xs font-medium text-black">Tiếng Pháp</label>
-                        <input value={card.tuPhap} onChange={e => updateCard(i, 'tuPhap', e.target.value)} className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm outline-none focus:border-primary" placeholder="Bonjour" />
+                        <input value={card.tuPhap} onChange={e => { updateCard(i, 'tuPhap', e.target.value); setCardErrors(p => ({...p, [i]: {...p[i], tuPhap: undefined}})) }} className={`w-full rounded-lg border px-2.5 py-1.5 text-sm outline-none focus:border-primary ${cardErrors[i]?.tuPhap ? 'border-red-500' : 'border-gray-200'}`} placeholder="Bonjour" />
+                        {cardErrors[i]?.tuPhap && <p className="mt-1 text-[11px] font-semibold text-red-500">{cardErrors[i].tuPhap}</p>}
                       </div>
                       <div>
                         <label className="mb-1 block text-xs font-medium text-black">IPA</label>
@@ -138,12 +161,35 @@ export default function FlashcardDeckForm({ deckId, defaultValues }: Props) {
                       </div>
                       <div>
                         <label className="mb-1 block text-xs font-medium text-black">Tiếng Việt</label>
-                        <input value={card.nghiaViet} onChange={e => updateCard(i, 'nghiaViet', e.target.value)} className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm outline-none focus:border-primary" placeholder="Xin chào" />
+                        <input value={card.nghiaViet} onChange={e => { updateCard(i, 'nghiaViet', e.target.value); setCardErrors(p => ({...p, [i]: {...p[i], nghiaViet: undefined}})) }} className={`w-full rounded-lg border px-2.5 py-1.5 text-sm outline-none focus:border-primary ${cardErrors[i]?.nghiaViet ? 'border-red-500' : 'border-gray-200'}`} placeholder="Xin chào" />
+                        {cardErrors[i]?.nghiaViet && <p className="mt-1 text-[11px] font-semibold text-red-500">{cardErrors[i].nghiaViet}</p>}
                       </div>
                     </div>
-                    <div>
-                      <label className="mb-1 block text-xs font-medium text-black">Ví dụ</label>
-                      <input value={card.viDu} onChange={e => updateCard(i, 'viDu', e.target.value)} className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm outline-none focus:border-primary" placeholder="Bonjour, bienvenue chez nous." />
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <label className="mb-1 block text-xs font-medium text-black">Ví dụ</label>
+                        <input value={card.viDu} onChange={e => updateCard(i, 'viDu', e.target.value)} className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm outline-none focus:border-primary" placeholder="Bonjour, bienvenue chez nous." />
+                      </div>
+                      <div className="w-48">
+                        <label className="mb-1 block text-xs font-medium text-black">Audio (MP3)</label>
+                        <input type="file" accept="audio/mpeg" onChange={e => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            if (file.type !== 'audio/mpeg') {
+                              setCardErrors(p => ({...p, [i]: {...p[i], audio: 'Định dạng không hỗ trợ. Chấp nhận: MP3'}}))
+                              return
+                            }
+                            if (file.size > 5 * 1024 * 1024) {
+                              setCardErrors(p => ({...p, [i]: {...p[i], audio: 'File audio vượt quá 5MB'}}))
+                              return
+                            }
+                            // Valid
+                            setCardErrors(p => ({...p, [i]: {...p[i], audio: undefined}}))
+                            setCards(prev => prev.map((c, idx) => idx === i ? { ...c, audioFile: file } : c))
+                          }
+                        }} className="block w-full text-xs file:mr-2 file:rounded-md file:border-0 file:bg-gray-100 file:px-2 file:py-1 file:text-xs file:font-semibold hover:file:bg-gray-200" />
+                        {cardErrors[i]?.audio && <p className="mt-1 text-[11px] font-semibold text-red-500">{cardErrors[i].audio}</p>}
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -54,9 +54,9 @@ export default function Pagination({ currentPage, totalPages, baseUrl, extraPara
           <Link
             key={p}
             href={makeHref(p as number)}
-            className={`flex h-7 w-6 items-center justify-center text-xs transition-all ${
+            className={`flex h-7 min-w-[28px] items-center justify-center rounded-md text-xs transition-all ${
               p === currentPage
-                ? 'font-bold text-gray-900'
+                ? 'font-bold text-gray-900 bg-[#5B5B5B]/10'
                 : 'font-semibold text-gray-500 hover:text-gray-900'
             }`}
           >

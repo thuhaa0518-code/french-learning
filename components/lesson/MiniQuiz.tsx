@@ -20,9 +20,9 @@ export default function MiniQuiz({ data }: { data: MiniQuizContent }) {
   }, 0)
 
   return (
-    <div className="rounded-xl border-2 border-purple-200 bg-purple-50 p-6">
+    <div className="rounded-r-xl border-l-4 border-[#CB30E0] bg-white p-6 shadow-sm border-y border-r border-gray-100">
       <div className="mb-4 flex items-center justify-between">
-        <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">Mini Quiz</span>
+        <span className="text-xs font-bold text-[#CB30E0] uppercase tracking-wider">Mini Quiz</span>
         {submitted && (
           <span className="text-sm font-bold text-primary">
             Đúng {correctCount}/{questions.length}

@@ -3,6 +3,8 @@
 import React, { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { Modal } from '@/components/ui/Modal'
+import { useToast } from '@/components/ui/ToastProvider'
 
 const PRIMARY = '#CB30E0'
 const PRIMARY_LIGHT = '#FDF0FF'
@@ -13,6 +15,7 @@ export interface DeckRow {
   level: string | null
   isPublish: boolean
   _count: { flashcards: number }
+  createdAt: Date
 }
 
 interface Props {
@@ -67,9 +70,11 @@ export default function FlashcardTable({ decks, total, page, pageSize, levels }:
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const { toast } = useToast()
 
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<{ type: 'single', id: string } | { type: 'bulk' } | null>(null)
   const [searchInput, setSearchInput] = useState(searchParams.get('q') ?? '')
   const [levelFilter, setLevelFilter] = useState(searchParams.get('level') ?? '')
 
@@ -91,12 +96,25 @@ export default function FlashcardTable({ decks, total, page, pageSize, levels }:
   function handleSearch() { router.push(buildUrl({ q: searchInput, level: levelFilter, page: 1 })) }
 
   async function handleDeleteSingle(id: string) {
-    if (!confirm('Bạn có chắc muốn xóa bộ thẻ này?')) return
+    setDeleteTarget({ type: 'single', id })
+  }
+
+  async function performDelete() {
+    if (!deleteTarget) return
     setLoading(true)
     try {
-      await fetch(`/api/flashcard/bo-the/${id}`, { method: 'DELETE' })
+      if (deleteTarget.type === 'single') {
+        await fetch(`/api/flashcard/bo-the/${deleteTarget.id}`, { method: 'DELETE' })
+      } else {
+        await Promise.all(Array.from(selected).map(id => fetch(`/api/flashcard/bo-the/${id}`, { method: 'DELETE' })))
+        setSelected(new Set())
+      }
+      toast('Xóa thành công!', 'success')
       router.refresh()
-    } finally { setLoading(false) }
+    } finally { 
+      setLoading(false)
+      setDeleteTarget(null)
+    }
   }
 
   async function handleBulkPublish() {
@@ -108,12 +126,7 @@ export default function FlashcardTable({ decks, total, page, pageSize, levels }:
   }
 
   async function handleBulkDelete() {
-    if (!confirm(`Xóa ${selected.size} bộ thẻ?`)) return
-    setLoading(true)
-    try {
-      await Promise.all(Array.from(selected).map(id => fetch(`/api/flashcard/bo-the/${id}`, { method: 'DELETE' })))
-      setSelected(new Set()); router.refresh()
-    } finally { setLoading(false) }
+    setDeleteTarget({ type: 'bulk' })
   }
 
   return (
@@ -174,7 +187,7 @@ export default function FlashcardTable({ decks, total, page, pageSize, levels }:
                     {deck.isPublish ? 'Đã đăng' : 'Nháp'}
                   </td>
                   <td className="px-4 py-4 font-medium text-gray-900">{deck._count.flashcards}</td>
-                  <td className="px-4 py-4 font-medium text-gray-900">18/07/2026</td>
+                  <td className="px-4 py-4 font-medium text-gray-900">{new Date(deck.createdAt).toLocaleDateString('vi-VN')}</td>
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-2">
                       <Link href={`/admin/flashcard/${deck.id}`} title="Chỉnh sửa" className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors text-gray-600"><IconEdit /></Link>
@@ -223,6 +236,27 @@ export default function FlashcardTable({ decks, total, page, pageSize, levels }:
           )}
         </div>
       </div>
+
+      <Modal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="Xác nhận xoá"
+        type="danger"
+        footer={
+          <>
+            <button onClick={() => setDeleteTarget(null)} className="rounded-xl px-5 py-2.5 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100">
+              Huỷ
+            </button>
+            <button onClick={performDelete} disabled={loading} className="rounded-xl bg-red-500 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-red-600 disabled:opacity-50">
+              Xác nhận
+            </button>
+          </>
+        }
+      >
+        <div className="flex flex-col items-center justify-center py-2 text-center">
+          <p className="text-[15px] text-gray-700 font-medium">Bạn chắc chắn muốn xoá?</p>
+        </div>
+      </Modal>
     </div>
   )
 }

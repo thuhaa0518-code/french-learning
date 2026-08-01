@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Modal } from '@/components/ui/Modal'
+import { useToast } from '@/components/ui/ToastProvider'
 
 const INPUT = 'w-full rounded-lg border border-gray-200 px-3 py-2 text-[15px] outline-none focus:border-primary focus:ring-1 focus:ring-primary/30'
 
@@ -30,8 +31,11 @@ const LABELS = ['A', 'B', 'C', 'D']
 
 export default function ExamForm({ examId, defaultValues }: Props) {
   const router = useRouter()
+  const { toast } = useToast()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [showVideoDeleteConfirm, setShowVideoDeleteConfirm] = useState(false)
+  const [pendingEvent, setPendingEvent] = useState<React.FormEvent<HTMLFormElement> | null>(null)
 
   const [tieuDe, setTieuDe] = useState(defaultValues?.tieuDe ?? '')
   const [moTa, setMoTa] = useState(defaultValues?.moTa ?? '')
@@ -39,27 +43,106 @@ export default function ExamForm({ examId, defaultValues }: Props) {
   const [thoiGianLam, setThoiGianLam] = useState(defaultValues?.thoiGianLam ?? 45)
   const [videoUrl, setVideoUrl] = useState(defaultValues?.videoUrl ?? '')
   const [questions, setQuestions] = useState<Question[]>(defaultValues?.questions ?? [emptyQuestion()])
+  const [questionErrors, setQuestionErrors] = useState<Record<number, { noiDung?: string, dapAn?: string }>>({})
 
   const addQuestion = () => setQuestions(prev => [...prev, emptyQuestion()])
 
-  const removeQuestion = (i: number) => setQuestions(prev => prev.filter((_, idx) => idx !== i))
+  const removeQuestion = (i: number) => {
+    setQuestions(prev => prev.filter((_, idx) => idx !== i))
+    setQuestionErrors(prev => {
+      const next = { ...prev }
+      delete next[i]
+      return next
+    })
+  }
 
-  const updateQuestion = (i: number, key: keyof Question, val: string) =>
+  const updateQuestion = (i: number, key: keyof Question, val: string) => {
     setQuestions(prev => prev.map((q, idx) => idx === i ? { ...q, [key]: val } : q))
+    if (key === 'noi_dung') {
+      setQuestionErrors(prev => ({ ...prev, [i]: { ...prev[i], noiDung: undefined } }))
+    }
+  }
 
-  const updateAnswer = (qi: number, ai: number, val: string) =>
+  const updateAnswer = (qi: number, ai: number, val: string) => {
     setQuestions(prev => prev.map((q, idx) => idx === qi
       ? { ...q, answers: q.answers.map((a, aidx) => aidx === ai ? { ...a, noi_dung: val } : a) }
       : q))
+    setQuestionErrors(prev => ({ ...prev, [qi]: { ...prev[qi], dapAn: undefined } }))
+  }
 
-  const setCorrectAnswer = (qi: number, ai: number) =>
+  const setCorrectAnswer = (qi: number, ai: number) => {
     setQuestions(prev => prev.map((q, idx) => idx === qi
       ? { ...q, answers: q.answers.map((a, aidx) => ({ ...a, la_dap_an_dung: aidx === ai })) }
       : q))
+    setQuestionErrors(prev => ({ ...prev, [qi]: { ...prev[qi], dapAn: undefined } }))
+  }
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const validateYouTubeVideo = (url: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const m = url.match(/(?:youtu\.be\/|v=)([A-Za-z0-9_-]{11})/)
+      if (!m) return resolve(false)
+      const ytId = m[1]
+      const img = new Image()
+      img.onload = () => resolve(img.width > 120)
+      img.onerror = () => resolve(false)
+      img.src = `https://img.youtube.com/vi/${ytId}/mqdefault.jpg`
+    })
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, skipVideoCheck = false) => {
     e.preventDefault()
-    const action = (e.nativeEvent as SubmitEvent).submitter
+    
+    // Validate inline
+    let hasError = false
+    const newErrors: Record<number, { noiDung?: string, dapAn?: string }> = {}
+
+    questions.forEach((q, i) => {
+      const err: { noiDung?: string, dapAn?: string } = {}
+      if (!q.noi_dung.trim()) {
+        err.noiDung = 'Câu hỏi không được để trống'
+        hasError = true
+      }
+      if (!q.answers.some(a => a.la_dap_an_dung && a.noi_dung.trim())) {
+        err.dapAn = 'Vui lòng chọn đáp án đúng'
+        hasError = true
+      }
+      if (err.noiDung || err.dapAn) {
+        newErrors[i] = err
+      }
+    })
+
+    if (hasError) {
+      setQuestionErrors(newErrors)
+      return
+    }
+
+    // Validate YouTube URL
+    if (videoUrl) {
+      const m = videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=))([A-Za-z0-9_-]{11})/)
+      if (!m) {
+        toast('Đường dẫn YouTube không hợp lệ', 'error')
+        return
+      }
+
+      // Check if video exists
+      setSaving(true)
+      const isValid = await validateYouTubeVideo(videoUrl)
+      if (!isValid) {
+        toast('Video không còn tồn tại trên YouTube', 'error')
+        setSaving(false)
+        return
+      }
+      setSaving(false)
+    }
+
+    // Intercept video deletion
+    if (defaultValues?.videoUrl && !videoUrl && !skipVideoCheck) {
+      setPendingEvent(e)
+      setShowVideoDeleteConfirm(true)
+      return
+    }
+
+    const action = (e.nativeEvent as SubmitEvent)?.submitter
     const isPublish = (action as HTMLButtonElement)?.value === 'publish'
     setSaving(true); setError('')
 
@@ -79,7 +162,6 @@ export default function ExamForm({ examId, defaultValues }: Props) {
       // 2. Thêm câu hỏi
       for (let i = 0; i < questions.length; i++) {
         const q = questions[i]
-        if (!q.noi_dung.trim()) continue
         await fetch(`/api/de-thi/${newExamId}/cau-hoi`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -93,9 +175,18 @@ export default function ExamForm({ examId, defaultValues }: Props) {
         })
       }
 
+      if (examId) {
+        toast('Cập nhật thành công!', 'success')
+      } else if (isPublish) {
+        toast('Đăng bài thành công', 'success')
+      } else {
+        toast('Lưu nháp thành công', 'success')
+      }
+
       router.push('/admin/de-thi')
       router.refresh()
     } catch {
+      toast('Không thể kết nối server', 'error')
       setError('Không thể kết nối server')
     } finally {
       setSaving(false)
@@ -203,7 +294,8 @@ export default function ExamForm({ examId, defaultValues }: Props) {
                   {/* Câu hỏi */}
                   <div>
                     <label className="mb-1 block text-xs font-medium text-gray-500">Nội dung câu hỏi</label>
-                    <textarea rows={2} value={q.noi_dung} onChange={e => updateQuestion(qi, 'noi_dung', e.target.value)} className={INPUT + ' resize-none'} placeholder="Nhập câu hỏi..." />
+                    <textarea rows={2} value={q.noi_dung} onChange={e => updateQuestion(qi, 'noi_dung', e.target.value)} className={`${INPUT} resize-none ${questionErrors[qi]?.noiDung ? 'border-red-500 focus:border-red-500' : ''}`} placeholder="Nhập câu hỏi..." />
+                    {questionErrors[qi]?.noiDung && <p className="mt-1 text-sm font-semibold text-red-500">{questionErrors[qi].noiDung}</p>}
                   </div>
 
                   {/* Đáp án */}
@@ -228,6 +320,7 @@ export default function ExamForm({ examId, defaultValues }: Props) {
                         </div>
                       ))}
                     </div>
+                    {questionErrors[qi]?.dapAn && <p className="mt-2 text-sm font-semibold text-red-500">{questionErrors[qi].dapAn}</p>}
                   </div>
 
                   {/* Giải thích */}
@@ -249,8 +342,29 @@ export default function ExamForm({ examId, defaultValues }: Props) {
           </button>
         </div>
 
-        {saving && <p className="text-center text-sm text-primary">Đang lưu...</p>}
+        {saving && <p className="text-center text-sm text-primary">Đang xử lý...</p>}
       </div>
+
+      <Modal
+        isOpen={showVideoDeleteConfirm}
+        onClose={() => setShowVideoDeleteConfirm(false)}
+        title="Gỡ video"
+        type="danger"
+        footer={
+          <>
+            <button onClick={() => setShowVideoDeleteConfirm(false)} className="rounded-xl px-5 py-2.5 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100">
+              Huỷ
+            </button>
+            <button onClick={() => { setShowVideoDeleteConfirm(false); if (pendingEvent) handleSubmit(pendingEvent, true) }} className="rounded-xl bg-red-500 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-red-600">
+              Xác nhận
+            </button>
+          </>
+        }
+      >
+        <div className="flex flex-col items-center justify-center py-2 text-center">
+          <p className="text-[15px] text-gray-700 font-medium">Xóa video sẽ gỡ liên kết với đề thi - Xác nhận?</p>
+        </div>
+      </Modal>
     </form>
   )
 }

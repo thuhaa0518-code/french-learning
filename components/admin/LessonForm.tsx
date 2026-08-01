@@ -281,6 +281,7 @@ export default forwardRef<LessonFormHandle, LessonFormProps>(function LessonForm
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [showBlockPicker, setShowBlockPicker] = useState(false)
   const [anhBiaPreview, setAnhBiaPreview] = useState(defaultValues?.anhBia ?? '')
   const fileRef = useRef<HTMLInputElement>(null)
@@ -301,13 +302,32 @@ export default forwardRef<LessonFormHandle, LessonFormProps>(function LessonForm
 
   const updateSection = (idx: number, data: SectionData) => setSections(prev => prev.map((s, i) => i === idx ? { ...s, data } : s))
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const action = (e.nativeEvent as SubmitEvent).submitter
-    const isPublish = (action as HTMLButtonElement)?.value === 'publish'
+  const handleSubmit = async (e?: React.FormEvent<HTMLFormElement>, isPublishArg?: boolean) => {
+    if (e) e.preventDefault()
+    const action = e ? (e.nativeEvent as SubmitEvent).submitter : null
+    const isPublish = isPublishArg ?? ((action as HTMLButtonElement)?.value === 'publish')
 
     setSaving(true)
     setError('')
+    setFieldErrors({})
+
+    let hasError = false
+    const errors: Record<string, string> = {}
+
+    if (!tieuDe.trim()) {
+      errors.tieuDe = 'Vui lòng nhập tiêu đề'
+      hasError = true
+    }
+    if (thoiGianDoc <= 0 || isNaN(thoiGianDoc)) {
+      errors.thoiGianDoc = 'Thời gian đọc phải là số dương'
+      hasError = true
+    }
+
+    if (hasError) {
+      setFieldErrors(errors)
+      setSaving(false)
+      return
+    }
 
     // Serialize sections to noiDung JSON string
     const serializedSections = sections.map((s, i) => ({
@@ -326,7 +346,12 @@ export default forwardRef<LessonFormHandle, LessonFormProps>(function LessonForm
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.error?.message ?? 'Có lỗi xảy ra')
+        const msg = data.error?.message ?? data.message ?? 'Có lỗi xảy ra'
+        if (msg.includes('slug') || msg.includes('Unique constraint failed')) {
+          setFieldErrors({ tieuDe: 'Slug đã tồn tại' })
+        } else {
+          setError(msg)
+        }
       } else {
         router.push('/admin/bai-hoc')
         router.refresh()
@@ -340,27 +365,7 @@ export default forwardRef<LessonFormHandle, LessonFormProps>(function LessonForm
 
   useImperativeHandle(ref, () => ({
     submit: async (isPublish: boolean) => {
-      setSaving(true)
-      setError('')
-      const serializedSections = sections.map((s, i) => ({ loai: s.loai, noiDung: JSON.stringify(s.data), thuTu: i }))
-      const payload = { tieuDe, moTa: moTa || undefined, level, chuDe, anhBia: anhBiaPreview || undefined, thoiGianDoc, isPublish, sections: serializedSections }
-      try {
-        const res = await fetch(lessonId ? `/api/bai-hoc/${lessonId}` : '/api/bai-hoc', {
-          method: lessonId ? 'PUT' : 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        })
-        const data = await res.json()
-        if (!res.ok) {
-          throw new Error(data.error?.message || 'Lỗi lưu bài học')
-        }
-        router.push('/admin/bai-hoc')
-        router.refresh()
-      } catch (e: any) {
-        setError(e.message)
-      } finally {
-        setSaving(false)
-      }
+      await handleSubmit(undefined, isPublish)
     },
     handleDelete: async () => {
       if (!confirm('Bạn có chắc chắn muốn xóa bài học này?')) return
@@ -392,7 +397,8 @@ export default forwardRef<LessonFormHandle, LessonFormProps>(function LessonForm
             {/* Tiêu đề */}
             <div>
               <label className="mb-1.5 block text-[15px] font-semibold text-gray-700">Tiêu đề bài học</label>
-              <input required value={tieuDe} onChange={e => setTieuDe(e.target.value)} className={INPUT} placeholder="Tiêu đề bài học" />
+              <input value={tieuDe} onChange={e => { setTieuDe(e.target.value); setFieldErrors(p => ({...p, tieuDe: ''})) }} className={`${INPUT} ${fieldErrors.tieuDe ? 'border-red-500 focus:border-red-500 focus:ring-red-500/30' : ''}`} placeholder="Tiêu đề bài học" />
+              {fieldErrors.tieuDe && <p className="mt-1.5 text-sm font-semibold text-red-500">{fieldErrors.tieuDe}</p>}
             </div>
 
             {/* Mô tả */}
@@ -421,9 +427,10 @@ export default forwardRef<LessonFormHandle, LessonFormProps>(function LessonForm
               <div className="w-40">
                 <label className="mb-1.5 block text-[15px] font-semibold text-gray-700 whitespace-nowrap">Thời gian đọc</label>
                 <div className="flex items-center gap-2">
-                  <input type="number" min={1} value={thoiGianDoc} onChange={e => setThoiGianDoc(parseInt(e.target.value) || 5)} className="w-full rounded-lg border border-gray-200 px-2 py-2 text-[15px] outline-none focus:border-primary" />
+                  <input type="number" value={thoiGianDoc} onChange={e => { setThoiGianDoc(parseInt(e.target.value) || 0); setFieldErrors(p => ({...p, thoiGianDoc: ''})) }} className={`w-full rounded-lg border px-2 py-2 text-[15px] outline-none focus:border-primary ${fieldErrors.thoiGianDoc ? 'border-red-500 focus:border-red-500' : 'border-gray-200'}`} />
                   <span className="shrink-0 text-[15px] text-gray-500">phút</span>
                 </div>
+                {fieldErrors.thoiGianDoc && <p className="mt-1.5 text-sm font-semibold text-red-500">{fieldErrors.thoiGianDoc}</p>}
               </div>
             </div>
 
@@ -452,12 +459,25 @@ export default forwardRef<LessonFormHandle, LessonFormProps>(function LessonForm
                   </>
                 )}
               </div>
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={e => {
+              <input ref={fileRef} type="file" accept="image/jpeg, image/png, image/webp" className="hidden" onChange={e => {
                 const file = e.target.files?.[0]
-                if (file) setAnhBiaPreview(URL.createObjectURL(file))
+                if (file) {
+                  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+                  if (!allowedTypes.includes(file.type)) {
+                    setFieldErrors(p => ({ ...p, anhBia: 'Định dạng không hỗ trợ. Chấp nhận: JPG, PNG, WebP' }))
+                    return
+                  }
+                  if (file.size > 10 * 1024 * 1024) {
+                    setFieldErrors(p => ({ ...p, anhBia: 'File vượt quá giới hạn: ảnh 10MB' }))
+                    return
+                  }
+                  setFieldErrors(p => ({ ...p, anhBia: '' }))
+                  setAnhBiaPreview(URL.createObjectURL(file))
+                }
               }} />
+              {fieldErrors.anhBia && <p className="mt-2 text-center text-sm font-semibold text-red-500">{fieldErrors.anhBia}</p>}
               {anhBiaPreview && (
-                <button type="button" onClick={() => setAnhBiaPreview('')} className="mt-2 w-full text-center text-xs text-red-400 hover:text-red-600">
+                <button type="button" onClick={() => { setAnhBiaPreview(''); setFieldErrors(p => ({...p, anhBia: ''})) }} className="mt-2 w-full text-center text-xs text-red-400 hover:text-red-600">
                   Xóa ảnh
                 </button>
               )}

@@ -50,7 +50,7 @@ export default async function AdminFlashcardPage({
         </h1>
         <Link
           href="/admin/flashcard/tao-moi"
-          className="inline-flex items-center justify-center gap-1.5 px-8 py-2 text-sm font-extrabold text-white rounded-xl transition-opacity hover:opacity-90 leading-none"
+          className="inline-flex items-center justify-center gap-1.5 px-8 py-2.5 text-[15px] font-extrabold text-white rounded-xl transition-opacity hover:opacity-90 leading-none"
           style={{ backgroundColor: '#CB30E0' }}
         >
           + TẠO MỚI

@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
+import { useToast } from '@/components/ui/ToastProvider'
+
 interface ChiTiet {
   questionId: string
   noiDung: string
@@ -24,6 +26,27 @@ export default function ResultDetail({ diemSo, chiTiet, examTitle, videoId, atte
   const isPassed = diemSo >= 50
   
   const [flagged, setFlagged] = useState<Set<number>>(new Set())
+  const [isVideoAvailable, setIsVideoAvailable] = useState(true)
+  const { toast } = useToast()
+
+  useEffect(() => {
+    if (videoId) {
+      const img = new Image()
+      img.onload = () => {
+        // Mặc định ảnh lỗi của youtube là hình nhỏ (120x90).
+        if (img.width === 120) {
+          setIsVideoAvailable(false)
+          toast('Video hiện không khả dụng', 'error')
+        }
+      }
+      img.onerror = () => {
+        setIsVideoAvailable(false)
+        toast('Video hiện không khả dụng', 'error')
+      }
+      // mqdefault (320x180) is always generated even if maxres is not.
+      img.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`
+    }
+  }, [videoId, toast])
 
   useEffect(() => {
     if (attemptId) {
@@ -56,7 +79,7 @@ export default function ResultDetail({ diemSo, chiTiet, examTitle, videoId, atte
       </div>
 
       {/* Video review */}
-      {videoId && (
+      {videoId && isVideoAvailable && (
         <div>
           <h3 className="mb-3 font-semibold text-gray-900">Video giải đề</h3>
           <div className="aspect-video overflow-hidden rounded-xl">

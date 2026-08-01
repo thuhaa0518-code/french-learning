@@ -31,7 +31,7 @@ export default async function AdminNguoiDungPage({
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
       orderBy: { tenHienThi: 'asc' },
-      select: { id: true, email: true, tenHienThi: true, vaiTro: true },
+      select: { id: true, email: true, tenHienThi: true, vaiTro: true, createdAt: true },
     }),
     prisma.user.count({ where }),
   ])
@@ -196,7 +196,7 @@ export default async function AdminNguoiDungPage({
         </div>
 
         {/* RIGHT — detail panel */}
-        <div className="w-64 shrink-0">
+        <div className="w-[360px] shrink-0">
           <div className="rounded-2xl border border-gray-200 bg-white p-5">
             {!selectedUser ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">

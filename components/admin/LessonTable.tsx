@@ -3,6 +3,8 @@
 import React, { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { Modal } from '@/components/ui/Modal'
+import { useToast } from '@/components/ui/ToastProvider'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -14,6 +16,7 @@ export interface LessonRow {
   isPublish: boolean
   slug: string
   _count: { sections: number }
+  createdAt: Date
 }
 
 interface LessonTableProps {
@@ -41,11 +44,7 @@ function IconEdit() {
 
 // Icon delete (trash)
 function IconTrash() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
-      <path d="M6 0h4v2h6v2H0V2h6V0zM1 5v11h14V5h-2v9H3V5H1zm4 2h2v5H5V7zm4 0h2v5H9V7z" />
-    </svg>
-  )
+  return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 18" fill="currentColor" width="14" height="18"><path fillRule="evenodd" clipRule="evenodd" d="M5 1h4v1H5z M1 3h12v1H1z M2 5v12h10V5H2z M3 6h8v10H3V6z M5 8h1v6H5V8z M8 8h1v6H8V8z" /></svg>
 }
 
 function IconSearch() {
@@ -152,6 +151,8 @@ export default function LessonTable({
   // Selected rows
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<{ type: 'single', id: string } | { type: 'bulk' } | null>(null)
+  const { toast } = useToast()
 
   // Local search/filter state (controlled)
   const [searchInput, setSearchInput] = useState(searchParams.get('q') ?? '')
@@ -228,29 +229,28 @@ export default function LessonTable({
 
   async function handleBulkDelete() {
     if (selected.size === 0) return
-    if (!confirm(`Bạn có chắc muốn xóa ${selected.size} bài học đã chọn?`)) return
-    setLoading(true)
-    try {
-      await Promise.all(
-        Array.from(selected).map((id) =>
-          fetch(`/api/bai-hoc/${id}`, { method: 'DELETE' }),
-        ),
-      )
-      setSelected(new Set())
-      router.refresh()
-    } finally {
-      setLoading(false)
-    }
+    setDeleteTarget({ type: 'bulk' })
   }
 
   async function handleDeleteSingle(id: string) {
-    if (!confirm('Bạn có chắc muốn xóa bài học này?')) return
+    setDeleteTarget({ type: 'single', id })
+  }
+
+  async function performDelete() {
+    if (!deleteTarget) return
     setLoading(true)
     try {
-      await fetch(`/api/bai-hoc/${id}`, { method: 'DELETE' })
+      if (deleteTarget.type === 'single') {
+        await fetch(`/api/bai-hoc/${deleteTarget.id}`, { method: 'DELETE' })
+      } else {
+        await Promise.all(Array.from(selected).map(id => fetch(`/api/bai-hoc/${id}`, { method: 'DELETE' })))
+        setSelected(new Set())
+      }
+      toast('Xóa thành công!', 'success')
       router.refresh()
-    } finally {
+    } finally { 
       setLoading(false)
+      setDeleteTarget(null)
     }
   }
 
@@ -391,7 +391,7 @@ export default function LessonTable({
                     0
                   </td>
                   <td className="px-4 py-4 font-medium text-gray-900">
-                    18/07/2026
+                    {new Date(lesson.createdAt).toLocaleDateString('vi-VN')}
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-2">
@@ -505,6 +505,27 @@ export default function LessonTable({
           )}
         </div>
       </div>
+
+      <Modal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="Xác nhận xoá"
+        type="danger"
+        footer={
+          <>
+            <button onClick={() => setDeleteTarget(null)} className="rounded-xl px-5 py-2.5 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100">
+              Huỷ
+            </button>
+            <button onClick={performDelete} disabled={loading} className="rounded-xl bg-red-500 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-red-600 disabled:opacity-50">
+              Xác nhận
+            </button>
+          </>
+        }
+      >
+        <div className="flex flex-col items-center justify-center py-2 text-center">
+          <p className="text-[15px] text-gray-700 font-medium">Bạn chắc chắn muốn xoá?</p>
+        </div>
+      </Modal>
     </div>
   )
 }

@@ -7,6 +7,7 @@ interface UserRow {
   tenHienThi: string
   email: string
   vaiTro: string
+  createdAt: Date
 }
 
 interface Props {
@@ -39,7 +40,7 @@ export default function UserListClient({ user, isSelected, currentSearch, curren
     >
       <td className="px-5 py-3 font-medium text-gray-900">{user.tenHienThi}</td>
       <td className="px-5 py-3 text-gray-500">—</td>
-      <td className="px-5 py-3 text-gray-500 text-xs">18/07/2026</td>
+      <td className="px-5 py-3 text-gray-500 text-xs">{new Date(user.createdAt).toLocaleDateString('vi-VN')}</td>
     </tr>
   )
 }

@@ -9,7 +9,7 @@ export default async function FlashcardPage({
 }: {
   searchParams: Promise<{ search?: string; page?: string }>
 }) {
-  const { search, page: pageStr } = await searchParams
+  const { search, page: pageStr, sort = 'desc' } = await searchParams
   const page = Math.max(1, parseInt(pageStr ?? '1'))
   const limit = 9
 
@@ -23,7 +23,7 @@ export default async function FlashcardPage({
       where,
       skip: (page - 1) * limit,
       take: limit,
-      orderBy: { tieuDe: 'desc' },
+      orderBy: { createdAt: sort as any },
       include: { _count: { select: { flashcards: true } } },
     }),
     prisma.flashcardDeck.count({ where }),
@@ -60,15 +60,18 @@ export default async function FlashcardPage({
           <p className="text-sm text-gray-500">
             Hiển thị {start}-{end} / {total} flashcard
           </p>
-          <button className="flex items-center gap-1.5 text-sm font-bold text-[#C930E0]">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <Link
+            href={`/flashcard?${search ? `search=${search}&` : ''}sort=${sort === 'desc' ? 'asc' : 'desc'}`}
+            className="flex items-center gap-1.5 text-sm font-bold text-[#C930E0] hover:opacity-80 transition-opacity"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ transform: sort === 'asc' ? 'rotate(180deg)' : 'none' }}>
               <path d="M8 9V21" stroke="currentColor" strokeWidth="2.5" strokeDasharray="4 4" strokeLinecap="round" />
               <path d="M8 3L3.5 9h9z" fill="currentColor" />
               <path d="M16 3V15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
               <path d="M16 21L11.5 15h9z" fill="currentColor" />
             </svg>
-            Mới nhất
-          </button>
+            {sort === 'desc' ? 'Mới nhất' : 'Cũ nhất'}
+          </Link>
         </div>
 
         {/* Grid */}
@@ -117,7 +120,7 @@ export default async function FlashcardPage({
                     </div>
                     <div className="flex items-center gap-1 text-[11px] font-medium text-gray-400">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D946EF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                      251,232
+                      {deck.id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0) % 500 + 10}
                     </div>
                   </div>
                 </div>
@@ -132,7 +135,7 @@ export default async function FlashcardPage({
           currentPage={page}
           totalPages={totalPages}
           baseUrl="/flashcard"
-          extraParams={search ? `&search=${search}` : ''}
+          extraParams={`${search ? `&search=${search}` : ''}&sort=${sort}`}
         />
       </div>
     </div>
