@@ -177,7 +177,7 @@ export default function ExamForm({ examId, defaultValues }: Props) {
       }
 
       if (examId) {
-        toast('Cập nhật thành công!', 'success')
+        toast('Lưu thành công!', 'success')
       } else if (isPublish) {
         toast('Đăng bài thành công', 'success')
       } else {

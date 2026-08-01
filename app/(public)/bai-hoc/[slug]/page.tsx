@@ -4,7 +4,6 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import SectionRenderer from '@/components/lesson/SectionRenderer'
 import LessonProgressBar from '@/components/lesson/LessonProgressBar'
-import SaveLessonButton from '@/components/lesson/SaveLessonButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,14 +33,11 @@ export default async function BaiHocDetailPage({
   const { userId } = await auth()
 
   let userDbId = null
-  let isSaved = false
 
   if (userId) {
     const user = await prisma.user.findUnique({ where: { clerkId: userId } })
     if (user) {
       userDbId = user.id
-      const saved: any[] = await prisma.$queryRaw`SELECT id FROM saved_lessons WHERE user_id = ${user.id} AND lesson_id = ${lesson.id} LIMIT 1`
-      isSaved = Array.isArray(saved) && saved.length > 0
     }
   }
 
@@ -135,7 +131,6 @@ export default async function BaiHocDetailPage({
                   </li>
                 ))}
               </ul>
-              <SaveLessonButton lessonId={lesson.id} initialSaved={isSaved} />
             </div>
 
             {/* Information Block */}

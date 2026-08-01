@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import Pagination from '@/components/shared/Pagination'
+import { getCurrentUser } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,7 +23,7 @@ export default async function FlashcardPage({
     ...(search ? { tieuDe: { contains: search, mode: 'insensitive' as const } } : {}),
   }
 
-  const [decks, total] = await Promise.all([
+  const [decks, total, user] = await Promise.all([
     prisma.flashcardDeck.findMany({
       where,
       skip: (page - 1) * limit,
@@ -31,7 +32,22 @@ export default async function FlashcardPage({
       include: { _count: { select: { flashcards: true } } },
     }),
     prisma.flashcardDeck.count({ where }),
+    getCurrentUser()
   ])
+
+  // Lấy lịch sử học của user hiện tại
+  let userDeckProgress: Record<string, number> = {}
+  if (user) {
+    const states = await prisma.flashcardState.findMany({
+      where: { userId: user.id },
+      select: { flashcard: { select: { deckId: true } } }
+    })
+    
+    states.forEach(s => {
+      const deckId = s.flashcard.deckId
+      userDeckProgress[deckId] = (userDeckProgress[deckId] || 0) + 1
+    })
+  }
 
   const totalPages = Math.ceil(total / limit)
   const start = (page - 1) * limit + 1
@@ -84,13 +100,25 @@ export default async function FlashcardPage({
         ) : (
           <div className="grid grid-cols-3 gap-5">
             {decks.map((deck: any, idx: number) => {
-              // Trạng thái mock dựa trên index (sẽ dùng user progress thực sau)
-              const statuses = ['Đã Hoàn Thành', 'Đang Học', 'Chưa Bắt Đầu']
-              const statusColors = ['text-[#55BE24]', 'text-[#0088FF]', 'text-[#5B5B5B]']
-              const dotColors = ['bg-[#55BE24]', 'bg-[#0088FF]', 'bg-[#5B5B5B]']
-              const status = statuses[idx % 3]
-              const statusColor = statusColors[idx % 3]
-              const dotColor = dotColors[idx % 3]
+              // Trạng thái dựa trên tiến độ học thực tế
+              const totalCards = deck._count.flashcards
+              const studiedCards = userDeckProgress[deck.id] || 0
+              
+              let status = 'Chưa Bắt Đầu'
+              let statusColor = 'text-[#5B5B5B]'
+              let dotColor = 'bg-[#5B5B5B]'
+
+              if (studiedCards > 0) {
+                if (studiedCards >= totalCards && totalCards > 0) {
+                  status = 'Đã Hoàn Thành'
+                  statusColor = 'text-[#55BE24]'
+                  dotColor = 'bg-[#55BE24]'
+                } else {
+                  status = 'Đang Học'
+                  statusColor = 'text-[#0088FF]'
+                  dotColor = 'bg-[#0088FF]'
+                }
+              }
 
               return (
               <Link key={deck.id} href={`/flashcard/${deck.id}`}

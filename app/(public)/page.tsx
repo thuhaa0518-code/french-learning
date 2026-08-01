@@ -16,24 +16,38 @@ export default async function HomePage() {
 
   // Lấy điểm cao nhất của user cho từng đề thi đang hiển thị trên trang chủ
   const bestScores: Record<string, number> = {}
-  if (user && exams.length > 0) {
-    const examIds = exams.map((e: any) => e.id)
-    const attempts = await prisma.examAttempt.findMany({
-      where: {
-        userId: user.id,
-        examId: { in: examIds },
-        daNop: true,
-        diemSo: { not: null },
-      },
-      select: { examId: true, diemSo: true },
-    })
-    for (const a of attempts) {
-      if (a.diemSo !== null) {
-        if (bestScores[a.examId] === undefined || a.diemSo > bestScores[a.examId]) {
-          bestScores[a.examId] = Math.round(a.diemSo)
+  let userDeckProgress: Record<string, number> = {}
+
+  if (user) {
+    if (exams.length > 0) {
+      const examIds = exams.map((e: any) => e.id)
+      const attempts = await prisma.examAttempt.findMany({
+        where: {
+          userId: user.id,
+          examId: { in: examIds },
+          daNop: true,
+          diemSo: { not: null },
+        },
+        select: { examId: true, diemSo: true },
+      })
+      for (const a of attempts) {
+        if (a.diemSo !== null) {
+          if (bestScores[a.examId] === undefined || a.diemSo > bestScores[a.examId]) {
+            bestScores[a.examId] = Math.round(a.diemSo)
+          }
         }
       }
     }
+
+    const states = await prisma.flashcardState.findMany({
+      where: { userId: user.id },
+      select: { flashcard: { select: { deckId: true } } }
+    })
+    
+    states.forEach(s => {
+      const deckId = s.flashcard.deckId
+      userDeckProgress[deckId] = (userDeckProgress[deckId] || 0) + 1
+    })
   }
 
   // Get distinct topics for variety
@@ -232,13 +246,24 @@ export default async function HomePage() {
 
           <CarouselWrapper>
             {decks.map((deck: any, idx: number) => {
-              // Sync mock status with flashcard list
-              const statuses = ['Đã Hoàn Thành', 'Đang Học', 'Chưa Bắt Đầu']
-              const statusColors = ['text-[#55BE24]', 'text-[#0088FF]', 'text-[#5B5B5B]']
-              const dotColors = ['bg-[#55BE24]', 'bg-[#0088FF]', 'bg-[#5B5B5B]']
-              const status = statuses[idx % 3]
-              const statusColor = statusColors[idx % 3]
-              const dotColor = dotColors[idx % 3]
+              const totalCards = deck._count.flashcards
+              const studiedCards = userDeckProgress[deck.id] || 0
+              
+              let status = 'Chưa Bắt Đầu'
+              let statusColor = 'text-[#5B5B5B]'
+              let dotColor = 'bg-[#5B5B5B]'
+
+              if (studiedCards > 0) {
+                if (studiedCards >= totalCards && totalCards > 0) {
+                  status = 'Đã Hoàn Thành'
+                  statusColor = 'text-[#55BE24]'
+                  dotColor = 'bg-[#55BE24]'
+                } else {
+                  status = 'Đang Học'
+                  statusColor = 'text-[#0088FF]'
+                  dotColor = 'bg-[#0088FF]'
+                }
+              }
               
               return (
               <Link key={deck.id} href={`/flashcard/${deck.id}`}

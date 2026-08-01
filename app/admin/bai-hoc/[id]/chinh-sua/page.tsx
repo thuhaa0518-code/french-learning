@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import LessonForm from '@/components/admin/LessonForm'
+import PreviewModal from '@/components/admin/PreviewModal'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,31 +32,16 @@ export default async function ChinhSuaBaiHocPage({
           <span>Chỉnh sửa</span>
         </div>
         <div className="flex items-center gap-2">
-          <Link
-            href={`/bai-hoc/${lesson.slug}`}
-            target="_blank"
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
-          >
-            Preview
-          </Link>
+          <PreviewModal url={`/bai-hoc/${lesson.slug}`} title="Preview Bài học" />
           <button
             form="lesson-form"
             name="action"
-            value="draft"
-            type="submit"
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
-          >
-            Lưu bản nháp
-          </button>
-          <button
-            form="lesson-form"
-            name="action"
-            value="publish"
+            value={lesson.isPublish ? 'publish' : 'draft'}
             type="submit"
             className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-90"
             style={{ backgroundColor: '#CB30E0' }}
           >
-            Đăng bài
+            Lưu
           </button>
         </div>
       </div>

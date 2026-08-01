@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useToast } from '@/components/ui/ToastProvider'
 
 interface CardRow { tuPhap: string; phatAm: string; nghiaViet: string; viDu: string; audioFile?: File | string }
 
@@ -11,6 +12,7 @@ interface Props { deckId?: string; defaultValues?: { tieuDe: string; moTa: strin
 
 export default function FlashcardDeckForm({ deckId, defaultValues }: Props) {
   const router = useRouter()
+  const { toast } = useToast()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [cardErrors, setCardErrors] = useState<Record<number, { tuPhap?: string, nghiaViet?: string, audio?: string }>>({})
@@ -74,6 +76,7 @@ export default function FlashcardDeckForm({ deckId, defaultValues }: Props) {
         })
       }
 
+      toast('Lưu thành công!', 'success')
       router.push('/admin/flashcard')
       router.refresh()
     } catch {

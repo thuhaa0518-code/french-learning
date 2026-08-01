@@ -64,8 +64,10 @@ export default async function BaiHocPage({
   return (
     <div className="min-h-screen bg-white">
       <div className="mx-auto max-w-6xl px-6 py-8">
-        {/* Title */}
-        <h1 className="mb-5 text-2xl font-extrabold text-primary">Bài Học</h1>
+        {/* Title & Saved Link */}
+        <div className="mb-5 flex items-center justify-between">
+          <h1 className="text-2xl font-extrabold text-primary">Bài Học</h1>
+        </div>
 
         {/* Level filter tabs */}
         <div className="mb-4 flex flex-wrap gap-2">

@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import UserListClient from '@/components/admin/UserListClient'
+import Pagination from '@/components/shared/Pagination'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,7 +31,7 @@ export default async function AdminNguoiDungPage({
       where,
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
-      orderBy: { tenHienThi: 'asc' },
+      orderBy: { createdAt: 'desc' },
       select: { id: true, email: true, tenHienThi: true, vaiTro: true, createdAt: true },
     }),
     prisma.user.count({ where }),
@@ -161,39 +162,16 @@ export default async function AdminNguoiDungPage({
               </tbody>
             </table>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-end gap-1.5 border-t border-gray-100 px-4 py-3">
-                <a href={page > 1 ? `?page=${page - 1}${search ? `&search=${search}` : ''}${vai_tro ? `&vai_tro=${vai_tro}` : ''}` : '#'}
-                  className={`flex h-7 w-7 items-center justify-center rounded-[6px] transition-all ${
-                    page <= 1 ? 'bg-[#FAEAFF]/50 text-[#C930E0]/50 cursor-not-allowed pointer-events-none' : 'bg-[#FAEAFF] text-[#C930E0] hover:bg-[#f3d9f9]'
-                  }`}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-                </a>
-                
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((p) => (
-                    <a
-                      key={p}
-                      href={`?page=${p}${search ? `&search=${search}` : ''}${vai_tro ? `&vai_tro=${vai_tro}` : ''}`}
-                      className={`flex h-7 min-w-[28px] items-center justify-center rounded-md text-xs transition-all ${
-                        p === page ? 'font-bold text-gray-900 bg-[#5B5B5B]/10' : 'font-semibold text-gray-500 hover:text-gray-900'
-                      }`}
-                    >
-                      {p}
-                    </a>
-                  ))}
-                  {totalPages > 5 && <span className="flex h-7 w-5 items-center justify-center text-xs font-semibold text-gray-400">...</span>}
-                </div>
+          </div>
 
-                <a href={page < totalPages ? `?page=${page + 1}${search ? `&search=${search}` : ''}${vai_tro ? `&vai_tro=${vai_tro}` : ''}` : '#'}
-                  className={`flex h-7 w-7 items-center justify-center rounded-[6px] transition-all ${
-                    page >= totalPages ? 'bg-[#C930E0]/50 text-white cursor-not-allowed pointer-events-none' : 'bg-[#C930E0] text-white hover:opacity-90'
-                  }`}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                </a>
-              </div>
-            )}
+          {/* Pagination */}
+          <div className="mt-6">
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              baseUrl="/admin/nguoi-dung"
+              extraParams={`${search ? `&search=${search}` : ''}${vai_tro ? `&vai_tro=${vai_tro}` : ''}${selected ? `&selected=${selected}` : ''}`}
+            />
           </div>
         </div>
 
@@ -245,44 +223,58 @@ export default async function AdminNguoiDungPage({
                 </div>
 
                 {/* Thống kê học tập */}
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-gray-500">Thống kê học tập</p>
-                <div className="mb-4 grid grid-cols-2 gap-2">
-                  <div className="rounded-xl bg-gray-50 p-3">
-                    <p className="text-lg font-bold text-gray-900">{selectedUser._count.flashcardStates}</p>
-                    <p className="text-[11px] text-gray-500">Tổng thẻ</p>
-                  </div>
-                  <div className="rounded-xl bg-gray-50 p-3">
-                    <p className="text-lg font-bold text-gray-900">{completedLessons}</p>
-                    <p className="text-[11px] text-gray-500">Bài học xong</p>
-                  </div>
-                  <div className="rounded-xl bg-gray-50 p-3">
-                    <p className="text-lg font-bold text-gray-900">{selectedUser.examAttempts.length}</p>
-                    <p className="text-[11px] text-gray-500">Đề đã làm</p>
-                  </div>
-                  <div className="rounded-xl bg-gray-50 p-3">
-                    <p className="text-lg font-bold" style={{ color: '#CB30E0' }}>
-                      {avgScore ? `${avgScore}%` : '—'}
-                    </p>
-                    <p className="text-[11px] text-gray-500">Điểm TB</p>
-                  </div>
-                </div>
-
-                {/* KỸ NĂNG — placeholder bars */}
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-gray-500">Kỹ năng</p>
-                {[
-                  { label: 'Từ vựng', pct: 78 },
-                  { label: 'Ngữ pháp', pct: 65 },
-                  { label: 'Nghe', pct: 70 },
-                  { label: 'Đọc', pct: 74 },
-                ].map((skill) => (
-                  <div key={skill.label} className="mb-2 flex items-center gap-2">
-                    <span className="w-14 shrink-0 text-xs text-gray-500">{skill.label}</span>
-                    <div className="flex-1 h-1.5 rounded-full bg-gray-100">
-                      <div className="h-full rounded-full" style={{ width: `${skill.pct}%`, backgroundColor: '#CB30E0' }} />
+                {selectedUser._count.lessonProgresses > 0 || selectedUser.examAttempts.length > 0 || selectedUser._count.flashcardStates > 0 ? (
+                  <>
+                    <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-gray-500">Thống kê học tập</p>
+                    <div className="mb-4 grid grid-cols-2 gap-2">
+                      <div className="rounded-xl bg-gray-50 p-3">
+                        <p className="text-lg font-bold text-gray-900">{selectedUser._count.flashcardStates}</p>
+                        <p className="text-[11px] text-gray-500">Tổng thẻ</p>
+                      </div>
+                      <div className="rounded-xl bg-gray-50 p-3">
+                        <p className="text-lg font-bold text-gray-900">{completedLessons}</p>
+                        <p className="text-[11px] text-gray-500">Bài học xong</p>
+                      </div>
+                      <div className="rounded-xl bg-gray-50 p-3">
+                        <p className="text-lg font-bold text-gray-900">{selectedUser.examAttempts.length}</p>
+                        <p className="text-[11px] text-gray-500">Đề đã làm</p>
+                      </div>
+                      <div className="rounded-xl bg-gray-50 p-3">
+                        <p className="text-lg font-bold" style={{ color: '#CB30E0' }}>
+                          {avgScore ? `${avgScore}%` : '—'}
+                        </p>
+                        <p className="text-[11px] text-gray-500">Điểm TB</p>
+                      </div>
                     </div>
-                    <span className="w-8 shrink-0 text-right text-xs text-gray-500">{skill.pct}%</span>
+
+                    {/* KỸ NĂNG — placeholder bars */}
+                    <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-gray-500">Kỹ năng</p>
+                    {(() => {
+                      const baseSkill = selectedUser._count.lessonProgresses > 0 || selectedUser.examAttempts.length > 0 ? (Number(avgScore) || 50) : 0;
+                      const vocabSkill = selectedUser._count.flashcardStates > 0 ? Math.min(100, Math.round((selectedUser._count.flashcardStates / 50) * 100)) : baseSkill;
+                      
+                      return [
+                        { label: 'Từ vựng', pct: vocabSkill },
+                        { label: 'Ngữ pháp', pct: baseSkill > 0 ? Math.min(100, baseSkill + 5) : 0 },
+                        { label: 'Nghe', pct: baseSkill > 0 ? Math.max(0, baseSkill - 5) : 0 },
+                        { label: 'Đọc', pct: baseSkill > 0 ? baseSkill : 0 },
+                      ].map((skill) => (
+                        <div key={skill.label} className="mb-2 flex items-center gap-2">
+                          <span className="w-14 shrink-0 text-xs text-gray-500">{skill.label}</span>
+                          <div className="flex-1 h-1.5 rounded-full bg-gray-100">
+                            <div className="h-full rounded-full" style={{ width: `${skill.pct}%`, backgroundColor: '#CB30E0' }} />
+                          </div>
+                          <span className="w-8 shrink-0 text-right text-xs text-gray-500">{skill.pct}%</span>
+                        </div>
+                      ))
+                    })()}
+                  </>
+                ) : (
+                  <div className="mt-8 flex flex-col items-center justify-center text-center">
+                    <p className="text-sm font-medium text-gray-900">Chưa có hoạt động</p>
+                    <p className="mt-1 text-xs text-gray-500">Học viên này chưa bắt đầu bất kỳ bài học nào.</p>
                   </div>
-                ))}
+                )}
               </div>
             )}
           </div>

@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, forwardRef, useImperativeHandle } from 'react'
 import { useRouter } from 'next/navigation'
+import { useToast } from '@/components/ui/ToastProvider'
 
 export interface LessonFormHandle {
   submit: (isPublish: boolean) => Promise<void>
@@ -290,6 +291,7 @@ function BlockWrapper({
 
 export default forwardRef<LessonFormHandle, LessonFormProps>(function LessonForm({ lessonId, defaultValues }, ref) {
   const router = useRouter()
+  const { toast } = useToast()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -353,10 +355,10 @@ export default forwardRef<LessonFormHandle, LessonFormProps>(function LessonForm
           method: 'POST',
           body: formData,
         })
-        if (!uploadRes.ok) {
-          throw new Error('Không thể upload ảnh bìa')
-        }
         const uploadData = await uploadRes.json()
+        if (!uploadRes.ok) {
+          throw new Error(uploadData.message || uploadData.error || 'Không thể upload ảnh bìa')
+        }
         finalAnhBia = uploadData.data.url
       } catch (err: any) {
         setError(err.message || 'Lỗi upload ảnh')
@@ -389,6 +391,7 @@ export default forwardRef<LessonFormHandle, LessonFormProps>(function LessonForm
           setError(msg)
         }
       } else {
+        toast('Lưu thành công!', 'success')
         router.push('/admin/bai-hoc')
         router.refresh()
       }

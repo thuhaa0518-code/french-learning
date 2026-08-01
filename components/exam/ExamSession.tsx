@@ -318,7 +318,7 @@ export default function ExamSession({ examId, attemptId: initialAttemptId, examT
           </div>
 
           {/* RIGHT — Question map + timer */}
-          <div className="w-72 shrink-0">
+          <div className="w-72 shrink-0 flex flex-col gap-5">
             <div className="rounded-2xl bg-white p-5 shadow-sm">
               {/* Header */}
               <div className="mb-1 h-1 w-1/3 rounded-full bg-primary" />
@@ -370,19 +370,21 @@ export default function ExamSession({ examId, attemptId: initialAttemptId, examT
                 </div>
               </div>
             </div>
+
+            {/* Submit button */}
+            <div className="flex justify-end">
+              <button
+                onClick={handlePressSubmit}
+                disabled={submitting}
+                className="rounded-xl border border-[#B3B3B3] bg-white px-8 py-2.5 text-sm font-semibold text-[#252641] transition-all hover:border-primary hover:text-primary disabled:opacity-50 shadow-sm"
+              >
+                {submitting ? 'Đang nộp...' : 'Nộp bài'}
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Submit button */}
-        <div className="mt-5 flex justify-end">
-          <button
-            onClick={handlePressSubmit}
-            disabled={submitting}
-            className="rounded-xl border border-[#B3B3B3] bg-white px-8 py-2.5 text-sm font-semibold text-[#252641] transition-all hover:border-primary hover:text-primary disabled:opacity-50"
-          >
-            {submitting ? 'Đang nộp...' : 'Nộp bài'}
-          </button>
-        </div>
+
       </div>
 
       {/* MODALS */}

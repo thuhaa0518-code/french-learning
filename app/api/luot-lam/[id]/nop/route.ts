@@ -110,8 +110,8 @@ export async function POST(req: NextRequest, { params }: Params) {
     })
 
     return ok({ diem_so: diemSo, chi_tiet: chiTiet })
-  } catch (error) {
+  } catch (error: any) {
     console.error('[POST /api/luot-lam/[id]/nop]', error)
-    return err('INTERNAL_ERROR', 'Không thể nộp bài', 500)
+    return err('INTERNAL_ERROR', error?.message || 'Không thể nộp bài', 500)
   }
 }
