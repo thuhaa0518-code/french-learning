@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Modal } from '@/components/ui/Modal'
 import { useToast } from '@/components/ui/ToastProvider'
@@ -142,7 +143,7 @@ export default function ExamForm({ examId, defaultValues }: Props) {
       return
     }
 
-    const action = (e.nativeEvent as SubmitEvent)?.submitter
+    const action = (e.nativeEvent as SubmitEvent)?.submitter || document.activeElement
     const isPublish = (action as HTMLButtonElement)?.value === 'publish'
     setSaving(true); setError('')
 
@@ -167,10 +168,10 @@ export default function ExamForm({ examId, defaultValues }: Props) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             loai: 'MULTIPLE_CHOICE',
-            noi_dung: q.noi_dung,
-            giai_thich: q.giai_thich || undefined,
-            thu_tu: i,
-            dap_an: q.answers.map(a => ({ noi_dung: a.noi_dung, la_dap_an_dung: a.la_dap_an_dung })),
+            noiDung: q.noi_dung,
+            giaiThich: q.giai_thich || undefined,
+            thuTu: i,
+            dapAn: q.answers.map(a => ({ noiDung: a.noi_dung, laDapAnDung: a.la_dap_an_dung })),
           }),
         })
       }

@@ -12,16 +12,15 @@ export interface LessonFormHandle {
 
 type SectionType = 'TEXT' | 'VOCABULARY' | 'GRAMMAR' | 'VIDEO' | 'MINI_QUIZ'
 
-interface WordRow { tu_phap: string; phat_am: string; nghia_viet: string; vi_du: string }
-interface QuizChoice { ky_hieu: string; noi_dung: string }
+interface WordRow { tuPhap: string; phatAm: string; nghiaViet: string; viDu: string }
+interface QuizChoice { kyHieu: string; noiDung: string }
 
 interface TextData { content: string }
 interface VocabData { title: string; words: WordRow[] }
-interface GrammarData { title: string; giai_thich: string; vi_du_phap: string; vi_du_cau: string; dich_nghia: string }
-interface VideoData { youtube_url: string }
-interface QuizChoice { ky_hieu: string; noi_dung: string }
-interface QuizQuestion { cau_hoi: string; lua_chon: QuizChoice[]; dap_an_dung: string }
-interface QuizData { questions?: QuizQuestion[]; cau_hoi?: string; lua_chon?: QuizChoice[]; dap_an_dung?: string }
+interface GrammarData { title: string; giaiThich: string; viDuPhap: string; viDuCau: string; dichNghia: string }
+interface VideoData { youtubeUrl: string; youtubeId?: string }
+interface QuizQuestion { cauHoi: string; luaChon: QuizChoice[]; dapAnDung: string }
+interface QuizData { questions?: QuizQuestion[]; cauHoi?: string; luaChon?: QuizChoice[]; dapAnDung?: string }
 
 type SectionData = TextData | VocabData | GrammarData | VideoData | QuizData
 
@@ -39,10 +38,10 @@ interface LessonFormProps {
 
 function defaultData(loai: SectionType): SectionData {
   if (loai === 'TEXT') return { content: '' }
-  if (loai === 'VOCABULARY') return { title: 'Từ vựng chính', words: [{ tu_phap: '', phat_am: '', nghia_viet: '', vi_du: '' }] }
-  if (loai === 'GRAMMAR') return { title: 'Ngữ pháp', giai_thich: '', vi_du_phap: '', vi_du_cau: '', dich_nghia: '' }
-  if (loai === 'VIDEO') return { youtube_url: '' }
-  return { questions: [{ cau_hoi: '', lua_chon: [{ ky_hieu: 'A', noi_dung: '' }, { ky_hieu: 'B', noi_dung: '' }, { ky_hieu: 'C', noi_dung: '' }, { ky_hieu: 'D', noi_dung: '' }], dap_an_dung: 'A' }] }
+  if (loai === 'VOCABULARY') return { title: 'Từ vựng chính', words: [{ tuPhap: '', phatAm: '', nghiaViet: '', viDu: '' }] }
+  if (loai === 'GRAMMAR') return { title: 'Ngữ pháp', giaiThich: '', viDuPhap: '', viDuCau: '', dichNghia: '' }
+  if (loai === 'VIDEO') return { youtubeUrl: '' }
+  return { questions: [{ cauHoi: '', luaChon: [{ kyHieu: 'A', noiDung: '' }, { kyHieu: 'B', noiDung: '' }, { kyHieu: 'C', noiDung: '' }, { kyHieu: 'D', noiDung: '' }], dapAnDung: 'A' }] }
 }
 
 const SECTION_LABELS: Record<SectionType, string> = {
@@ -73,7 +72,7 @@ function TextEditor({ data, onChange }: { data: TextData; onChange: (d: TextData
 }
 
 function VocabEditor({ data, onChange }: { data: VocabData; onChange: (d: VocabData) => void }) {
-  const addWord = () => onChange({ ...data, words: [...data.words, { tu_phap: '', phat_am: '', nghia_viet: '', vi_du: '' }] })
+  const addWord = () => onChange({ ...data, words: [...data.words, { tuPhap: '', phatAm: '', nghiaViet: '', viDu: '' }] })
   const removeWord = (i: number) => onChange({ ...data, words: data.words.filter((_, idx) => idx !== i) })
   const updateWord = (i: number, key: keyof WordRow, val: string) => {
     const words = data.words.map((w, idx) => idx === i ? { ...w, [key]: val } : w)
@@ -95,9 +94,9 @@ function VocabEditor({ data, onChange }: { data: VocabData; onChange: (d: VocabD
           <tbody>
             {data.words.map((w, i) => (
               <tr key={i} className="border-b border-gray-50">
-                {(['tu_phap', 'phat_am', 'nghia_viet', 'vi_du'] as const).map(k => (
+                {(['tuPhap', 'phatAm', 'nghiaViet', 'viDu'] as const).map(k => (
                   <td key={k} className="py-1.5 pr-2">
-                    <input value={w[k]} onChange={e => updateWord(i, k, e.target.value)} className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-primary" placeholder={k === 'tu_phap' ? 'Bonjour' : k === 'phat_am' ? '/bɔ̃ʒuʁ/' : k === 'nghia_viet' ? 'Xin chào' : 'Ví dụ...'} />
+                    <input value={w[k]} onChange={e => updateWord(i, k, e.target.value)} className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-primary" placeholder={k === 'tuPhap' ? 'Bonjour' : k === 'phatAm' ? '/bɔ̃ʒuʁ/' : k === 'nghiaViet' ? 'Xin chào' : 'Ví dụ...'} />
                   </td>
                 ))}
                 <td className="py-1.5">
@@ -119,10 +118,10 @@ function VocabEditor({ data, onChange }: { data: VocabData; onChange: (d: VocabD
 
 function GrammarEditor({ data, onChange }: { data: GrammarData; onChange: (d: GrammarData) => void }) {
   const fields: { key: keyof GrammarData; label: string; placeholder: string }[] = [
-    { key: 'giai_thich', label: 'Giải thích', placeholder: 'Giải thích ngữ pháp...' },
-    { key: 'vi_du_phap', label: 'Ví dụ cú pháp', placeholder: 'Comment allez-vous ?' },
-    { key: 'vi_du_cau', label: 'Ví dụ câu', placeholder: '"Bonjour! Comment allez-vous?"' },
-    { key: 'dich_nghia', label: 'Dịch nghĩa', placeholder: '"Xin chào! Bạn có khỏe không?"' },
+    { key: 'giaiThich', label: 'Giải thích', placeholder: 'Giải thích ngữ pháp...' },
+    { key: 'viDuPhap', label: 'Ví dụ cú pháp', placeholder: 'Comment allez-vous ?' },
+    { key: 'viDuCau', label: 'Ví dụ câu', placeholder: '"Bonjour! Comment allez-vous?"' },
+    { key: 'dichNghia', label: 'Dịch nghĩa', placeholder: '"Xin chào! Bạn có khỏe không?"' },
   ]
   return (
     <div className="flex flex-col gap-2">
@@ -141,12 +140,15 @@ function VideoEditor({ data, onChange }: { data: VideoData; onChange: (d: VideoD
     const m = url.match(/(?:youtu\.be\/|v=)([A-Za-z0-9_-]{11})/)
     return m ? m[1] : null
   }
-  const ytId = getYoutubeId(data.youtube_url)
+  const ytId = getYoutubeId(data.youtubeUrl || '')
   return (
     <div>
       <label className="mb-1.5 block text-xs font-medium text-black">URL YouTube</label>
       <div className="flex gap-2">
-        <input value={data.youtube_url} onChange={e => onChange({ youtube_url: e.target.value })} className={INPUT} placeholder="https://youtube.com/watch?v=..." />
+        <input value={data.youtubeUrl || ''} onChange={e => {
+          const ytId = getYoutubeId(e.target.value)
+          onChange({ youtubeUrl: e.target.value, youtubeId: ytId || undefined })
+        }} className={INPUT} placeholder="https://youtube.com/watch?v=..." />
         <button type="button" className="shrink-0 rounded-lg border border-gray-200 px-3 text-xs font-medium text-gray-600 hover:border-primary hover:text-primary transition-colors">Đổi URL</button>
       </div>
       {ytId && (
@@ -160,16 +162,25 @@ function VideoEditor({ data, onChange }: { data: VideoData; onChange: (d: VideoD
 
 function QuizEditor({ data, onChange }: { data: QuizData; onChange: (d: QuizData) => void }) {
   // Migration for legacy data
-  const questions = data.questions || [{
-    cau_hoi: data.cau_hoi || '',
-    lua_chon: data.lua_chon || [
-      { ky_hieu: 'A', noi_dung: '' },
-      { ky_hieu: 'B', noi_dung: '' },
-      { ky_hieu: 'C', noi_dung: '' },
-      { ky_hieu: 'D', noi_dung: '' },
+  const rawQuestions = data.questions || [{
+    cauHoi: data.cauHoi || (data as any).cau_hoi || '',
+    luaChon: data.luaChon || (data as any).lua_chon || [
+      { kyHieu: 'A', noiDung: '' },
+      { kyHieu: 'B', noiDung: '' },
+      { kyHieu: 'C', noiDung: '' },
+      { kyHieu: 'D', noiDung: '' },
     ],
-    dap_an_dung: data.dap_an_dung || 'A',
+    dapAnDung: data.dapAnDung || (data as any).dap_an_dung || 'A',
   }]
+
+  const questions = rawQuestions.map((q: any) => ({
+    cauHoi: q.cauHoi || q.cau_hoi || '',
+    luaChon: (q.luaChon || q.lua_chon || []).map((c: any) => ({
+      kyHieu: c.kyHieu || c.ky_hieu || '',
+      noiDung: c.noiDung || c.noi_dung || '',
+    })),
+    dapAnDung: q.dapAnDung || q.dap_an_dung || 'A',
+  }))
 
   const updateQuestion = (qIndex: number, newQ: QuizQuestion) => {
     const nextQ = [...questions]
@@ -180,14 +191,14 @@ function QuizEditor({ data, onChange }: { data: QuizData; onChange: (d: QuizData
   const addQuestion = () => {
     onChange({
       questions: [...questions, {
-        cau_hoi: '',
-        lua_chon: [
-          { ky_hieu: 'A', noi_dung: '' },
-          { ky_hieu: 'B', noi_dung: '' },
-          { ky_hieu: 'C', noi_dung: '' },
-          { ky_hieu: 'D', noi_dung: '' },
+        cauHoi: '',
+        luaChon: [
+          { kyHieu: 'A', noiDung: '' },
+          { kyHieu: 'B', noiDung: '' },
+          { kyHieu: 'C', noiDung: '' },
+          { kyHieu: 'D', noiDung: '' },
         ],
-        dap_an_dung: 'A'
+        dapAnDung: 'A'
       }]
     })
   }
@@ -204,19 +215,19 @@ function QuizEditor({ data, onChange }: { data: QuizData; onChange: (d: QuizData
           <div className="flex items-center justify-between mb-1.5">
             <label className="block text-[13px] font-bold text-black">Câu {qIndex + 1}:</label>
           </div>
-          <input value={q.cau_hoi} onChange={e => updateQuestion(qIndex, { ...q, cau_hoi: e.target.value })} className={'w-full rounded-xl border border-gray-300 px-4 py-2.5 text-[15px] outline-none focus:border-primary mb-3'} placeholder="Nhập câu hỏi..." />
+          <input value={q.cauHoi} onChange={e => updateQuestion(qIndex, { ...q, cauHoi: e.target.value })} className={'w-full rounded-xl border border-gray-300 px-4 py-2.5 text-[15px] outline-none focus:border-primary mb-3'} placeholder="Nhập câu hỏi..." />
           <div className="flex flex-col gap-2">
-            {q.lua_chon.map((c, i) => {
-              const isCorrect = q.dap_an_dung === c.ky_hieu
+            {q.luaChon.map((c: any, i: number) => {
+              const isCorrect = q.dapAnDung === c.kyHieu
               return (
-                <div key={c.ky_hieu} className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors ${isCorrect ? 'border-green-300 bg-[#F0FDF4]' : 'border-gray-100 bg-white shadow-sm'}`}>
-                  <button type="button" onClick={() => updateQuestion(qIndex, { ...q, dap_an_dung: c.ky_hieu })} className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${isCorrect ? 'bg-[#4ADE80] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
-                    {c.ky_hieu}
+                <div key={c.kyHieu} className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors ${isCorrect ? 'border-green-300 bg-[#F0FDF4]' : 'border-gray-100 bg-white shadow-sm'}`}>
+                  <button type="button" onClick={() => updateQuestion(qIndex, { ...q, dapAnDung: c.kyHieu })} className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${isCorrect ? 'bg-[#4ADE80] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
+                    {c.kyHieu}
                   </button>
-                  <input value={c.noi_dung} onChange={e => {
-                    const lua_chon = q.lua_chon.map((opt, idx) => idx === i ? { ...opt, noi_dung: e.target.value } : opt)
-                    updateQuestion(qIndex, { ...q, lua_chon })
-                  }} className={`flex-1 bg-transparent text-[15px] outline-none ${isCorrect ? 'text-[#22C55E] font-medium placeholder:text-[#4ADE80]' : 'text-black placeholder:text-gray-500'}`} placeholder={`Đáp án ${c.ky_hieu}...`} />
+                  <input value={c.noiDung} onChange={e => {
+                    const luaChon = q.luaChon.map((opt: any, idx: number) => idx === i ? { ...opt, noiDung: e.target.value } : opt)
+                    updateQuestion(qIndex, { ...q, luaChon })
+                  }} className={`flex-1 bg-transparent text-[15px] outline-none ${isCorrect ? 'text-[#22C55E] font-medium placeholder:text-[#4ADE80]' : 'text-black placeholder:text-gray-500'}`} placeholder={`Đáp án ${c.kyHieu}...`} />
                 </div>
               )
             })}
@@ -290,7 +301,7 @@ export default forwardRef<LessonFormHandle, LessonFormProps>(function LessonForm
   const [moTa, setMoTa] = useState(defaultValues?.moTa ?? '')
   const [level, setLevel] = useState(defaultValues?.level ?? 'A1')
   const [chuDe, setChuDe] = useState(defaultValues?.chuDe ?? 'VOCABULARY')
-  const [thoiGianDoc, setThoiGianDoc] = useState(defaultValues?.thoiGianDoc ?? 5)
+  const [thoiGianDoc, setThoiGianDoc] = useState<number | ''>(defaultValues?.thoiGianDoc ?? 5)
   const [sections, setSections] = useState<Section[]>(defaultValues?.sections ?? [])
 
   const addSection = (loai: SectionType) => {
@@ -304,7 +315,7 @@ export default forwardRef<LessonFormHandle, LessonFormProps>(function LessonForm
 
   const handleSubmit = async (e?: React.FormEvent<HTMLFormElement>, isPublishArg?: boolean) => {
     if (e) e.preventDefault()
-    const action = e ? (e.nativeEvent as SubmitEvent).submitter : null
+    const action = e ? (e.nativeEvent as SubmitEvent).submitter || document.activeElement : null
     const isPublish = isPublishArg ?? ((action as HTMLButtonElement)?.value === 'publish')
 
     setSaving(true)
@@ -318,7 +329,8 @@ export default forwardRef<LessonFormHandle, LessonFormProps>(function LessonForm
       errors.tieuDe = 'Vui lòng nhập tiêu đề'
       hasError = true
     }
-    if (thoiGianDoc <= 0 || isNaN(thoiGianDoc)) {
+    const thoiGianNum = Number(thoiGianDoc)
+    if (thoiGianNum <= 0 || isNaN(thoiGianNum)) {
       errors.thoiGianDoc = 'Thời gian đọc phải là số dương'
       hasError = true
     }
@@ -336,7 +348,7 @@ export default forwardRef<LessonFormHandle, LessonFormProps>(function LessonForm
       thuTu: i,
     }))
 
-    const payload = { tieuDe, moTa: moTa || undefined, level, chuDe, anhBia: anhBiaPreview || undefined, thoiGianDoc, isPublish, sections: serializedSections }
+    const payload = { tieuDe, moTa: moTa || undefined, level, chuDe, anhBia: anhBiaPreview || undefined, thoiGianDoc: thoiGianNum, isPublish, sections: serializedSections }
 
     try {
       const res = await fetch(lessonId ? `/api/bai-hoc/${lessonId}` : '/api/bai-hoc', {
@@ -427,7 +439,7 @@ export default forwardRef<LessonFormHandle, LessonFormProps>(function LessonForm
               <div className="w-40">
                 <label className="mb-1.5 block text-[15px] font-semibold text-gray-700 whitespace-nowrap">Thời gian đọc</label>
                 <div className="flex items-center gap-2">
-                  <input type="number" value={thoiGianDoc} onChange={e => { setThoiGianDoc(parseInt(e.target.value) || 0); setFieldErrors(p => ({...p, thoiGianDoc: ''})) }} className={`w-full rounded-lg border px-2 py-2 text-[15px] outline-none focus:border-primary ${fieldErrors.thoiGianDoc ? 'border-red-500 focus:border-red-500' : 'border-gray-200'}`} />
+                  <input type="number" value={thoiGianDoc} onChange={e => { setThoiGianDoc(e.target.value === '' ? '' : Number(e.target.value)); setFieldErrors(p => ({...p, thoiGianDoc: ''})) }} className={`w-full rounded-lg border px-2 py-2 text-[15px] outline-none focus:border-primary ${fieldErrors.thoiGianDoc ? 'border-red-500 focus:border-red-500' : 'border-gray-200'}`} />
                   <span className="shrink-0 text-[15px] text-gray-500">phút</span>
                 </div>
                 {fieldErrors.thoiGianDoc && <p className="mt-1.5 text-sm font-semibold text-red-500">{fieldErrors.thoiGianDoc}</p>}

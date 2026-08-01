@@ -35,7 +35,6 @@ export default function RootLayout({
       formFieldInputPlaceholder__signUpPassword: 'Tạo một mật khẩu',
       formFieldLabel__password: 'Mật khẩu',
       formFieldLabel__emailAddress: 'email',
-      formFieldError__required: 'Vui lòng nhập {{fieldName}}',
       formFieldInputPlaceholder__phoneNumber: 'Nhập số điện thoại của bạn',
       formFieldLabel__phoneNumber: 'Số điện thoại',
       unstable__errors: {

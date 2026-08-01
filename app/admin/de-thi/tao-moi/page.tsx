@@ -12,8 +12,6 @@ export default function TaoMoiDeThiPage() {
           <span>Tạo mới</span>
         </div>
         <div className="flex items-center gap-2">
-          <button form="exam-form" type="button" className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-500 hover:bg-red-50 transition-colors">Xoá đề thi</button>
-          <button form="exam-form" type="button" className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors">Preview</button>
           <button form="exam-form" name="action" value="draft" type="submit" className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors">Lưu bản nháp</button>
           <button form="exam-form" name="action" value="publish" type="submit" className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 transition-opacity" style={{ backgroundColor: '#CB30E0' }}>Đăng bài</button>
         </div>

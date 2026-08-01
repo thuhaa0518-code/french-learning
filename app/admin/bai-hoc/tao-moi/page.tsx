@@ -23,13 +23,6 @@ export default function TaoMoiBaiHocPage() {
           </button>
           <button
             form="lesson-form"
-            type="button"
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
-          >
-            Preview
-          </button>
-          <button
-            form="lesson-form"
             name="action"
             value="draft"
             type="submit"

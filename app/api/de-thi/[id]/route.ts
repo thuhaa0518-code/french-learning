@@ -63,3 +63,50 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     return err('INTERNAL_ERROR', 'Không thể xóa đề thi', 500)
   }
 }
+
+// PUT /api/de-thi/[id] — Admin only, cập nhật đề thi
+export async function PUT(req: NextRequest, { params }: Params) {
+  try {
+    await requireAdmin()
+  } catch (error) {
+    if (error instanceof Error && 'code' in error) {
+      const e = error as Error & { code: string; statusCode: number }
+      return err(e.code, e.message, e.statusCode)
+    }
+    return err('UNAUTHORIZED', 'Unauthorized', 401)
+  }
+
+  const { id } = await params
+
+  try {
+    const body = await req.json()
+    const { tieuDe, moTa, level, thoiGianLam, isPublish, videoUrl } = body
+
+    const existing = await prisma.exam.findUnique({ where: { id } })
+    if (!existing) {
+      return err('NOT_FOUND', 'Đề thi không tồn tại', 404)
+    }
+
+    // Cập nhật thông tin cơ bản, xoá toàn bộ câu hỏi cũ
+    const exam = await prisma.$transaction(async (tx) => {
+      await tx.question.deleteMany({ where: { examId: id } })
+      
+      return tx.exam.update({
+        where: { id },
+        data: {
+          tieuDe,
+          moTa,
+          level,
+          thoiGianLam,
+          isPublish,
+          videoId: videoUrl ? (videoUrl.match(/(?:youtu\.be\/|v=)([A-Za-z0-9_-]{11})/) || [])[1] : null,
+        },
+      })
+    })
+
+    return ok({ exam })
+  } catch (error) {
+    console.error('[PUT /api/de-thi/[id]]', error)
+    return err('INTERNAL_ERROR', 'Không thể cập nhật đề thi', 500)
+  }
+}

@@ -1,5 +1,7 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import FlashcardDeckForm from '@/components/admin/FlashcardDeckForm'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,34 +20,36 @@ export default async function AdminFlashcardDetailPage({
   if (!deck) notFound()
 
   return (
-    <div className="p-8">
-      <h1 className="mb-2 text-2xl font-bold text-gray-900">{deck.tieuDe}</h1>
-      <p className="mb-6 text-sm text-gray-500">{deck.flashcards.length} thẻ</p>
-
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-gray-200 bg-gray-50 text-left">
-              <th className="px-4 py-3 font-semibold text-gray-700">Từ pháp</th>
-              <th className="px-4 py-3 font-semibold text-gray-700">Phát âm</th>
-              <th className="px-4 py-3 font-semibold text-gray-700">Nghĩa</th>
-              <th className="px-4 py-3 font-semibold text-gray-700">Ví dụ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {deck.flashcards.map((card) => (
-              <tr key={card.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
-                <td className="px-4 py-3 font-medium text-primary">{card.tuPhap}</td>
-                <td className="px-4 py-3 text-gray-500 italic">{card.phatAm ?? '—'}</td>
-                <td className="px-4 py-3 text-gray-700">{card.nghiaViet}</td>
-                <td className="px-4 py-3 text-gray-500">{card.viDu ?? '—'}</td>
-              </tr>
-            ))}
-            {deck.flashcards.length === 0 && (
-              <tr><td colSpan={4} className="px-4 py-8 text-center text-sm text-gray-400">Chưa có thẻ nào</td></tr>
-            )}
-          </tbody>
-        </table>
+    <div className="flex h-full flex-col">
+      {/* Breadcrumb + actions */}
+      <div className="flex items-center justify-between px-6 pt-6 pb-2">
+        <div className="flex items-center gap-2 text-[23px] font-extrabold tracking-wide text-primary">
+          <Link href="/admin/flashcard" className="uppercase hover:underline">QUẢN LÝ FLASHCARD</Link>
+          <span className="text-primary">»</span>
+          <span>Chỉnh sửa</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href={`/flashcard/${id}`} target="_blank" className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors">Preview</Link>
+          <button form="flashcard-form" name="action" value="draft" type="submit" className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors">Lưu bản nháp</button>
+          <button form="flashcard-form" name="action" value="publish" type="submit" className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 transition-opacity" style={{ backgroundColor: '#CB30E0' }}>Đăng bài</button>
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto">
+        <FlashcardDeckForm
+          deckId={id}
+          defaultValues={{
+            tieuDe: deck.tieuDe,
+            moTa: deck.moTa ?? '',
+            level: deck.level as 'A1' | 'A2' | 'B1' | 'B2',
+            isPublish: deck.isPublish,
+            cards: deck.flashcards.map((c) => ({
+              tuPhap: c.tuPhap,
+              phatAm: c.phatAm ?? '',
+              nghiaViet: c.nghiaViet,
+              viDu: c.viDu ?? '',
+            })),
+          }}
+        />
       </div>
     </div>
   )

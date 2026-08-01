@@ -163,33 +163,35 @@ export default async function AdminNguoiDungPage({
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-1 border-t border-gray-100 px-4 py-3">
-                {page > 1 && (
-                  <a href={`?page=${page - 1}${search ? `&search=${search}` : ''}${vai_tro ? `&vai_tro=${vai_tro}` : ''}`}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:border-primary hover:text-primary transition-colors text-xs">
-                    ‹
-                  </a>
-                )}
-                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((p) => (
-                  <a
-                    key={p}
-                    href={`?page=${p}${search ? `&search=${search}` : ''}${vai_tro ? `&vai_tro=${vai_tro}` : ''}`}
-                    className={`flex h-7 w-7 items-center justify-center rounded-lg border text-xs transition-colors ${
-                      p === page
-                        ? 'border-primary bg-primary text-white'
-                        : 'border-gray-200 text-gray-600 hover:border-primary hover:text-primary'
-                    }`}
-                  >
-                    {p}
-                  </a>
-                ))}
-                {totalPages > 5 && <span className="text-xs text-gray-400">...</span>}
-                {page < totalPages && (
-                  <a href={`?page=${page + 1}${search ? `&search=${search}` : ''}${vai_tro ? `&vai_tro=${vai_tro}` : ''}`}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:border-primary hover:text-primary transition-colors text-xs">
-                    ›
-                  </a>
-                )}
+              <div className="flex items-center justify-end gap-1.5 border-t border-gray-100 px-4 py-3">
+                <a href={page > 1 ? `?page=${page - 1}${search ? `&search=${search}` : ''}${vai_tro ? `&vai_tro=${vai_tro}` : ''}` : '#'}
+                  className={`flex h-7 w-7 items-center justify-center rounded-[6px] transition-all ${
+                    page <= 1 ? 'bg-[#FAEAFF]/50 text-[#C930E0]/50 cursor-not-allowed pointer-events-none' : 'bg-[#FAEAFF] text-[#C930E0] hover:bg-[#f3d9f9]'
+                  }`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                </a>
+                
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((p) => (
+                    <a
+                      key={p}
+                      href={`?page=${p}${search ? `&search=${search}` : ''}${vai_tro ? `&vai_tro=${vai_tro}` : ''}`}
+                      className={`flex h-7 min-w-[28px] items-center justify-center rounded-md text-xs transition-all ${
+                        p === page ? 'font-bold text-gray-900 bg-[#5B5B5B]/10' : 'font-semibold text-gray-500 hover:text-gray-900'
+                      }`}
+                    >
+                      {p}
+                    </a>
+                  ))}
+                  {totalPages > 5 && <span className="flex h-7 w-5 items-center justify-center text-xs font-semibold text-gray-400">...</span>}
+                </div>
+
+                <a href={page < totalPages ? `?page=${page + 1}${search ? `&search=${search}` : ''}${vai_tro ? `&vai_tro=${vai_tro}` : ''}` : '#'}
+                  className={`flex h-7 w-7 items-center justify-center rounded-[6px] transition-all ${
+                    page >= totalPages ? 'bg-[#C930E0]/50 text-white cursor-not-allowed pointer-events-none' : 'bg-[#C930E0] text-white hover:opacity-90'
+                  }`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                </a>
               </div>
             )}
           </div>

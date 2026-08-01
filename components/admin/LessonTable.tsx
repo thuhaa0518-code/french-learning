@@ -475,27 +475,33 @@ export default function LessonTable({
               <button
                 onClick={() => handlePageChange(page - 1)}
                 disabled={page <= 1}
-                className="w-6 h-6 flex items-center justify-center rounded bg-[#CB30E0] text-white disabled:opacity-40 hover:opacity-90 transition-opacity"
+                className={`flex h-7 w-7 items-center justify-center rounded-[6px] transition-all ${
+                  page <= 1 ? 'bg-[#FAEAFF]/50 text-[#C930E0]/50 cursor-not-allowed' : 'bg-[#FAEAFF] text-[#C930E0] hover:bg-[#f3d9f9]'
+                }`}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <div className="flex items-center gap-2 px-2">
+              <div className="flex items-center gap-1">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
                   <button
                     key={p}
                     onClick={() => handlePageChange(p)}
-                    className="text-sm font-bold text-gray-600 transition-colors hover:text-primary"
+                    className={`flex h-7 min-w-[28px] items-center justify-center rounded-md text-xs transition-all ${
+                      p === page ? 'font-bold text-gray-900 bg-[#5B5B5B]/10' : 'font-semibold text-gray-500 hover:text-gray-900'
+                    }`}
                   >
-                    {p === page ? <span className="text-gray-900">{p}</span> : p}
+                    {p}
                   </button>
                 ))}
               </div>
               <button
                 onClick={() => handlePageChange(page + 1)}
                 disabled={page >= totalPages}
-                className="w-6 h-6 flex items-center justify-center rounded bg-[#CB30E0] text-white disabled:opacity-40 hover:opacity-90 transition-opacity"
+                className={`flex h-7 w-7 items-center justify-center rounded-[6px] transition-all ${
+                  page >= totalPages ? 'bg-[#C930E0]/50 text-white cursor-not-allowed' : 'bg-[#C930E0] text-white hover:opacity-90'
+                }`}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />

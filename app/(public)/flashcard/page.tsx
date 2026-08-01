@@ -7,7 +7,11 @@ export const dynamic = 'force-dynamic'
 export default async function FlashcardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ search?: string; page?: string }>
+  searchParams: Promise<{
+    search?: string
+    page?: string
+    sort?: string
+  }>
 }) {
   const { search, page: pageStr, sort = 'desc' } = await searchParams
   const page = Math.max(1, parseInt(pageStr ?? '1'))
@@ -61,7 +65,7 @@ export default async function FlashcardPage({
             Hiển thị {start}-{end} / {total} flashcard
           </p>
           <Link
-            href={`/flashcard?${search ? `search=${search}&` : ''}sort=${sort === 'desc' ? 'asc' : 'desc'}`}
+            href={`/flashcard?${page > 1 ? `page=${page}&` : ''}${search ? `search=${search}&` : ''}sort=${sort === 'desc' ? 'asc' : 'desc'}`}
             className="flex items-center gap-1.5 text-sm font-bold text-[#C930E0] hover:opacity-80 transition-opacity"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ transform: sort === 'asc' ? 'rotate(180deg)' : 'none' }}>

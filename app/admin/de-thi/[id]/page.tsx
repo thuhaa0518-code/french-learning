@@ -1,5 +1,7 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import ExamForm from '@/components/admin/ExamForm'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,41 +25,40 @@ export default async function AdminDeThiDetailPage({
   if (!exam) notFound()
 
   return (
-    <div className="p-8">
-      <h1 className="mb-2 text-2xl font-bold text-gray-900">{exam.tieuDe}</h1>
-      <p className="mb-8 text-sm text-gray-500">{exam.questions.length} câu hỏi • {exam.thoiGianLam} phút</p>
-
-      <div className="flex flex-col gap-6">
-        {exam.questions.map((q, idx) => (
-          <div key={q.id} className="rounded-2xl border border-gray-200 bg-white p-6">
-            <p className="mb-4 font-semibold text-gray-900">
-              <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs text-white font-bold">
-                {idx + 1}
-              </span>
-              {q.noiDung}
-            </p>
-            <div className="pl-8 flex flex-col gap-2">
-              {q.answers.map((a) => (
-                <div
-                  key={a.id}
-                  className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${a.laDapAnDung ? 'bg-green-50 text-green-700 font-medium' : 'bg-gray-50 text-gray-600'}`}
-                >
-                  {a.laDapAnDung && <span>✓</span>}
-                  {a.noiDung}
-                </div>
-              ))}
-            </div>
-            {q.giaiThich && (
-              <p className="mt-3 pl-8 text-xs text-gray-500 italic">💡 {q.giaiThich}</p>
-            )}
-          </div>
-        ))}
-
-        {exam.questions.length === 0 && (
-          <div className="rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center text-sm text-gray-400">
-            Chưa có câu hỏi. Dùng API POST /api/de-thi/{id}/cau-hoi để thêm câu hỏi.
-          </div>
-        )}
+    <div className="flex h-full flex-col">
+      {/* Breadcrumb + actions */}
+      <div className="flex items-center justify-between px-6 pt-6 pb-2">
+        <div className="flex items-center gap-2 text-[23px] font-extrabold tracking-wide text-primary">
+          <Link href="/admin/de-thi" className="uppercase hover:underline">QUẢN LÝ ĐỀ THI</Link>
+          <span className="text-primary">»</span>
+          <span>Chỉnh sửa</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href={`/de-thi/${id}`} target="_blank" className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors">Preview</Link>
+          <button form="exam-form" name="action" value="draft" type="submit" className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors">Lưu bản nháp</button>
+          <button form="exam-form" name="action" value="publish" type="submit" className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 transition-opacity" style={{ backgroundColor: '#CB30E0' }}>Đăng bài</button>
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto">
+        <ExamForm
+          examId={id}
+          defaultValues={{
+            tieuDe: exam.tieuDe,
+            moTa: exam.moTa ?? '',
+            level: exam.level as 'A1' | 'A2' | 'B1' | 'B2',
+            thoiGianLam: exam.thoiGianLam,
+            isPublish: exam.isPublish,
+            videoUrl: exam.videoId ? `https://youtube.com/watch?v=${exam.videoId}` : undefined,
+            questions: exam.questions.map((q) => ({
+              noi_dung: q.noiDung,
+              giai_thich: q.giaiThich ?? '',
+              answers: q.answers.map((a) => ({
+                noi_dung: a.noiDung,
+                la_dap_an_dung: a.laDapAnDung,
+              })),
+            })),
+          }}
+        />
       </div>
     </div>
   )

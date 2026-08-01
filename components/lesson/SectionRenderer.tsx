@@ -54,14 +54,14 @@ function VocabularyTable({ data }: { data: VocabularySectionContent }) {
       </div>
       <table className="w-full text-sm bg-white">
         <tbody>
-          {data.words?.map((word, i) => (
+          {data.words?.map((word: any, i) => (
             <tr key={i} className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
               <td className="px-5 py-4 w-1/3">
-                <div className="font-bold text-gray-900 text-[15px]">{word.tuPhap}</div>
-                <div className="text-gray-500 text-xs mt-1">/{word.phatAm}/</div>
+                <div className="font-bold text-gray-900 text-[15px]">{word.tuPhap || word.tu_phap}</div>
+                <div className="text-gray-500 text-xs mt-1">{word.phatAm || word.phat_am}</div>
               </td>
               <td className="px-5 py-4 w-auto">
-                <div className="text-gray-800">{word.nghiaViet}</div>
+                <div className="text-gray-800">{word.nghiaViet || word.nghia_viet}</div>
               </td>
               <td className="px-5 py-4 w-16 text-right">
                 <button className="text-gray-400 hover:text-[#CB30E0] transition-colors p-2 rounded-full hover:bg-purple-50" title="Nghe phát âm">
@@ -80,20 +80,20 @@ function VocabularyTable({ data }: { data: VocabularySectionContent }) {
   )
 }
 
-function GrammarBlock({ data }: { data: GrammarSectionContent }) {
+function GrammarBlock({ data }: { data: any }) {
   return (
     <div className="rounded-r-xl border-l-4 border-[#CB30E0] bg-white p-6 shadow-sm border-y border-r border-gray-100">
       <h3 className="mb-3 text-xs font-bold text-[#CB30E0] uppercase tracking-wider">Ngữ pháp</h3>
       {data.title && <h4 className="mb-3 text-[15px] font-bold text-gray-900">{data.title}</h4>}
-      {data.giaiThich && <p className="mb-3 text-[14px] text-gray-800 leading-relaxed">{data.giaiThich}</p>}
-      {data.viDuPhap && (
+      {(data.giaiThich || data.giai_thich) && <p className="mb-3 text-[14px] text-gray-800 leading-relaxed">{data.giaiThich || data.giai_thich}</p>}
+      {(data.viDuPhap || data.vi_du_phap) && (
         <div className="mb-2 mt-4 rounded-lg bg-gray-50 px-4 py-3 border border-gray-100">
           <span className="text-xs font-bold text-gray-500 uppercase">Ví dụ</span>
-          <p className="mt-1 font-bold text-gray-900">{data.viDuPhap}</p>
-          {data.dichNghia && <p className="mt-1 text-sm text-gray-600">{data.dichNghia}</p>}
+          <p className="mt-1 font-bold text-gray-900">{data.viDuPhap || data.vi_du_phap}</p>
+          {(data.dichNghia || data.dich_nghia) && <p className="mt-1 text-sm text-gray-600">{data.dichNghia || data.dich_nghia}</p>}
         </div>
       )}
-      {data.viDuCau && <p className="text-sm italic text-gray-500 mt-2">{data.viDuCau}</p>}
+      {(data.viDuCau || data.vi_du_cau) && <p className="text-sm italic text-gray-500 mt-2">{data.viDuCau || data.vi_du_cau}</p>}
     </div>
   )
 }

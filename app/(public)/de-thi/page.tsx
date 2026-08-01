@@ -10,7 +10,12 @@ const FILTER_TABS = ['Tất cả', 'A1', 'A2', 'B1', 'B2', 'DELF', 'Thực hành
 export default async function DeThiPage({
   searchParams,
 }: {
-  searchParams: Promise<{ level?: string; search?: string; page?: string }>
+  searchParams: Promise<{
+    level?: string
+    search?: string
+    page?: string
+    sort?: string
+  }>
 }) {
   const { level, search, page: pageStr, sort = 'desc' } = await searchParams
   const page = Math.max(1, parseInt(pageStr ?? '1'))
@@ -116,7 +121,7 @@ export default async function DeThiPage({
             Hiển thị {start}-{end} / {total} đề thi
           </p>
           <Link
-            href={`/de-thi?${level ? `level=${level}&` : ''}${search ? `search=${search}&` : ''}sort=${sort === 'desc' ? 'asc' : 'desc'}`}
+            href={`/de-thi?${page > 1 ? `page=${page}&` : ''}${level ? `level=${level}&` : ''}${search ? `search=${search}&` : ''}sort=${sort === 'desc' ? 'asc' : 'desc'}`}
             className="flex items-center gap-1.5 text-sm font-bold text-[#C930E0] hover:opacity-80 transition-opacity"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ transform: sort === 'asc' ? 'rotate(180deg)' : 'none' }}>

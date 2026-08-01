@@ -21,6 +21,7 @@ interface SearchParams {
   chu_de?: string
   search?: string
   page?: string
+  sort?: string
 }
 
 export default async function BaiHocPage({
@@ -116,7 +117,7 @@ export default async function BaiHocPage({
             Hiển thị {start}-{end} / {total} bài học
           </p>
           <Link
-            href={`/bai-hoc?${level ? `level=${level}&` : ''}${chu_de ? `chu_de=${chu_de}&` : ''}${search ? `search=${search}&` : ''}sort=${sort === 'desc' ? 'asc' : 'desc'}`}
+            href={`/bai-hoc?${page > 1 ? `page=${page}&` : ''}${level ? `level=${level}&` : ''}${chu_de ? `chu_de=${chu_de}&` : ''}${search ? `search=${search}&` : ''}sort=${sort === 'desc' ? 'asc' : 'desc'}`}
             className="flex items-center gap-1.5 text-sm font-bold text-[#C930E0] hover:opacity-80 transition-opacity"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ transform: sort === 'asc' ? 'rotate(180deg)' : 'none' }}>

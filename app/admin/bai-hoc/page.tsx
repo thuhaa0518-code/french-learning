@@ -62,7 +62,7 @@ export default async function AdminBaiHocPage({
     await Promise.all([
       prisma.lesson.findMany({
         where,
-        orderBy: { tieuDe: 'asc' },
+        orderBy: { createdAt: 'desc' },
         skip: (page - 1) * PAGE_SIZE,
         take: PAGE_SIZE,
         include: { _count: { select: { sections: true } } },

@@ -26,7 +26,7 @@ export default function FlashcardDeckForm({ deckId, defaultValues }: Props) {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const action = (e.nativeEvent as SubmitEvent).submitter
+    const action = (e.nativeEvent as SubmitEvent).submitter || document.activeElement
     const isPublish = (action as HTMLButtonElement)?.value === 'publish'
     
     // Inline validation
@@ -70,7 +70,7 @@ export default function FlashcardDeckForm({ deckId, defaultValues }: Props) {
         await fetch('/api/flashcard/the', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ deck_id: newDeckId, tu_phap: card.tuPhap, nghia_viet: card.nghiaViet, phat_am: card.phatAm || undefined, vi_du: card.viDu || undefined }),
+          body: JSON.stringify({ deckId: newDeckId, tuPhap: card.tuPhap, nghiaViet: card.nghiaViet, phatAm: card.phatAm || undefined, viDu: card.viDu || undefined }),
         })
       }
 

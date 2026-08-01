@@ -29,7 +29,7 @@ export default async function AdminFlashcardPage({
       where,
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
-      orderBy: { tieuDe: 'asc' },
+      orderBy: { createdAt: 'desc' },
       include: { _count: { select: { flashcards: true } } },
     }),
     prisma.flashcardDeck.count({ where }),

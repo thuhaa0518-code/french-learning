@@ -2,7 +2,7 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '@prisma/client'
 import { Pool } from 'pg'
 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined }
+const globalForPrisma = globalThis as unknown as { prisma2: PrismaClient | undefined }
 
 function createPrismaClient() {
   const pool = new Pool({
@@ -12,6 +12,6 @@ function createPrismaClient() {
   return new PrismaClient({ adapter } as ConstructorParameters<typeof PrismaClient>[0])
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient()
+export const prisma = globalForPrisma.prisma2 ?? createPrismaClient()
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma2 = prisma

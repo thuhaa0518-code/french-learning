@@ -53,3 +53,47 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     return err('INTERNAL_ERROR', 'Không thể xóa bộ thẻ', 500)
   }
 }
+
+// PUT /api/flashcard/bo-the/[id] — Admin only, cập nhật bộ thẻ
+export async function PUT(req: NextRequest, { params }: Params) {
+  try {
+    await requireAdmin()
+  } catch (error) {
+    if (error instanceof Error && 'code' in error) {
+      const e = error as Error & { code: string; statusCode: number }
+      return err(e.code, e.message, e.statusCode)
+    }
+    return err('UNAUTHORIZED', 'Unauthorized', 401)
+  }
+
+  const { id } = await params
+
+  try {
+    const body = await req.json()
+    const { tieuDe, moTa, level, isPublish } = body
+
+    const existing = await prisma.flashcardDeck.findUnique({ where: { id } })
+    if (!existing) {
+      return err('NOT_FOUND', 'Bộ thẻ không tồn tại', 404)
+    }
+
+    const deck = await prisma.$transaction(async (tx) => {
+      await tx.flashcard.deleteMany({ where: { deckId: id } })
+      
+      return tx.flashcardDeck.update({
+        where: { id },
+        data: {
+          tieuDe,
+          moTa,
+          level,
+          isPublish,
+        },
+      })
+    })
+
+    return ok({ deck })
+  } catch (error) {
+    console.error('[PUT /api/flashcard/bo-the/[id]]', error)
+    return err('INTERNAL_ERROR', 'Không thể cập nhật bộ thẻ', 500)
+  }
+}

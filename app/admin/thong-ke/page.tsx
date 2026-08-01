@@ -79,7 +79,7 @@ export default async function ThongKePage({
         <h1 className="text-2xl font-extrabold uppercase tracking-wide" style={{ color: '#CB30E0' }}>
           Thống Kê Hệ Thống
         </h1>
-        <div className="flex items-center rounded-full bg-[#F4F4F6] p-1.5 border border-gray-100 shadow-inner">
+        <div className="flex items-center rounded-xl bg-[#F4F4F6] p-1.5 border border-gray-100 shadow-inner">
           {[
             { label: '7 ngày', value: '7' },
             { label: '30 ngày', value: '30' },
@@ -90,7 +90,7 @@ export default async function ThongKePage({
               <Link
                 key={t.value}
                 href={`/admin/thong-ke?range=${t.value}`}
-                className={`rounded-full px-6 py-2 text-sm font-bold transition-all ${
+                className={`rounded-[10px] px-6 py-2 text-sm font-bold transition-all ${
                   isActive
                     ? 'bg-white text-[#CB30E0] shadow-[0_2px_8px_rgba(0,0,0,0.06)]'
                     : 'text-gray-800 hover:text-black'

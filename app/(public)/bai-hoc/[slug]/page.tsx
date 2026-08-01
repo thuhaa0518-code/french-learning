@@ -4,6 +4,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import SectionRenderer from '@/components/lesson/SectionRenderer'
 import LessonProgressBar from '@/components/lesson/LessonProgressBar'
+import SaveLessonButton from '@/components/lesson/SaveLessonButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,6 +32,18 @@ export default async function BaiHocDetailPage({
   if (!lesson) notFound()
 
   const { userId } = await auth()
+
+  let userDbId = null
+  let isSaved = false
+
+  if (userId) {
+    const user = await prisma.user.findUnique({ where: { clerkId: userId } })
+    if (user) {
+      userDbId = user.id
+      const saved: any[] = await prisma.$queryRaw`SELECT id FROM saved_lessons WHERE user_id = ${user.id} AND lesson_id = ${lesson.id} LIMIT 1`
+      isSaved = Array.isArray(saved) && saved.length > 0
+    }
+  }
 
   // Fetch a related flashcard deck for the sidebar
   const relatedDeck = await prisma.flashcardDeck.findFirst({
@@ -122,12 +135,7 @@ export default async function BaiHocDetailPage({
                   </li>
                 ))}
               </ul>
-              <button className="mt-6 flex items-center justify-center gap-2 rounded-lg border-2 border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-900 transition-colors hover:border-[#CB30E0] hover:text-[#CB30E0]">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-                </svg>
-                Lưu bài học
-              </button>
+              <SaveLessonButton lessonId={lesson.id} initialSaved={isSaved} />
             </div>
 
             {/* Information Block */}

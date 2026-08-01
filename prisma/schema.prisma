@@ -17,6 +17,7 @@ model User {
   lessonProgresses LessonProgress[]
   examAttempts     ExamAttempt[]
   flashcardStates  FlashcardState[]
+  savedLessons     SavedLesson[]
 
   @@map("users")
 }
@@ -48,6 +49,7 @@ model Lesson {
 
   sections   LessonSection[]
   progresses LessonProgress[]
+  savedBy    SavedLesson[]
 
   @@map("lessons")
 }
@@ -194,4 +196,17 @@ model AttemptAnswer {
 
   @@unique([attemptId, questionId])
   @@map("attempt_answers")
+}
+
+model SavedLesson {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  lessonId  String   @map("lesson_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@map("saved_lessons")
 }

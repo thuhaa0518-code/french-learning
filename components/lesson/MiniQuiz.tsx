@@ -5,11 +5,20 @@ import type { MiniQuizContent } from '@/types'
 
 export default function MiniQuiz({ data }: { data: MiniQuizContent }) {
   // Normalize data for legacy support
-  const questions = data.questions || [{
-    cauHoi: data.cauHoi || '',
-    luaChon: data.luaChon || [],
-    dapAnDung: data.dapAnDung || 'A',
+  const rawQuestions = data.questions || [{
+    cauHoi: data.cauHoi || (data as any).cau_hoi || '',
+    luaChon: data.luaChon || (data as any).lua_chon || [],
+    dapAnDung: data.dapAnDung || (data as any).dap_an_dung || 'A',
   }]
+
+  const questions = rawQuestions.map((q: any) => ({
+    cauHoi: q.cauHoi || q.cau_hoi || '',
+    luaChon: (q.luaChon || q.lua_chon || []).map((c: any) => ({
+      kyHieu: c.kyHieu || c.ky_hieu || '',
+      noiDung: c.noiDung || c.noi_dung || '',
+    })),
+    dapAnDung: q.dapAnDung || q.dap_an_dung || 'A',
+  }))
 
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string | null>>({})
   const [submitted, setSubmitted] = useState(false)
@@ -43,7 +52,7 @@ export default function MiniQuiz({ data }: { data: MiniQuizContent }) {
               </p>
 
               <div className="flex flex-col gap-2">
-                {q.luaChon?.map((choice) => {
+                {q.luaChon?.map((choice: any) => {
                   let className = 'flex items-center gap-3 rounded-lg border-2 px-4 py-3 text-sm font-medium transition-all cursor-pointer '
                   if (!submitted) {
                     className += selected === choice.kyHieu
