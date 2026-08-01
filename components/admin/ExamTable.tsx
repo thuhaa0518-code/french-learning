@@ -15,7 +15,7 @@ export interface ExamRow {
   level: string
   thoiGianLam: number
   isPublish: boolean
-  _count: { questions: number }
+  _count: { questions: number; attempts: number }
   createdAt: Date
 }
 
@@ -148,7 +148,7 @@ export default function ExamTable({ exams, total, page, pageSize }: Props) {
                   <td className="px-4 py-4 font-medium text-gray-900">
                     {exam.isPublish ? 'Đã đăng' : 'Nháp'}
                   </td>
-                  <td className="px-4 py-4 font-medium text-gray-900">1810</td>
+                  <td className="px-4 py-4 font-medium text-gray-900">{exam._count.attempts}</td>
                   <td className="px-4 py-4 font-medium text-gray-900">{new Date(exam.createdAt).toLocaleDateString('vi-VN')}</td>
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-2">

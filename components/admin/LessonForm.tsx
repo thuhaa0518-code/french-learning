@@ -295,6 +295,7 @@ export default forwardRef<LessonFormHandle, LessonFormProps>(function LessonForm
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [showBlockPicker, setShowBlockPicker] = useState(false)
   const [anhBiaPreview, setAnhBiaPreview] = useState(defaultValues?.anhBia ?? '')
+  const [anhBiaFile, setAnhBiaFile] = useState<File | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const [tieuDe, setTieuDe] = useState(defaultValues?.tieuDe ?? '')
@@ -341,6 +342,29 @@ export default forwardRef<LessonFormHandle, LessonFormProps>(function LessonForm
       return
     }
 
+    let finalAnhBia = anhBiaPreview
+    if (anhBiaFile) {
+      const formData = new FormData()
+      formData.append('file', anhBiaFile)
+      formData.append('folder', 'lessons')
+      
+      try {
+        const uploadRes = await fetch('/api/admin/upload', {
+          method: 'POST',
+          body: formData,
+        })
+        if (!uploadRes.ok) {
+          throw new Error('Không thể upload ảnh bìa')
+        }
+        const uploadData = await uploadRes.json()
+        finalAnhBia = uploadData.data.url
+      } catch (err: any) {
+        setError(err.message || 'Lỗi upload ảnh')
+        setSaving(false)
+        return
+      }
+    }
+
     // Serialize sections to noiDung JSON string
     const serializedSections = sections.map((s, i) => ({
       loai: s.loai,
@@ -348,7 +372,7 @@ export default forwardRef<LessonFormHandle, LessonFormProps>(function LessonForm
       thuTu: i,
     }))
 
-    const payload = { tieuDe, moTa: moTa || undefined, level, chuDe, anhBia: anhBiaPreview || undefined, thoiGianDoc: thoiGianNum, isPublish, sections: serializedSections }
+    const payload = { tieuDe, moTa: moTa || undefined, level, chuDe, anhBia: finalAnhBia || undefined, thoiGianDoc: thoiGianNum, isPublish, sections: serializedSections }
 
     try {
       const res = await fetch(lessonId ? `/api/bai-hoc/${lessonId}` : '/api/bai-hoc', {
@@ -484,12 +508,13 @@ export default forwardRef<LessonFormHandle, LessonFormProps>(function LessonForm
                     return
                   }
                   setFieldErrors(p => ({ ...p, anhBia: '' }))
+                  setAnhBiaFile(file)
                   setAnhBiaPreview(URL.createObjectURL(file))
                 }
               }} />
               {fieldErrors.anhBia && <p className="mt-2 text-center text-sm font-semibold text-red-500">{fieldErrors.anhBia}</p>}
               {anhBiaPreview && (
-                <button type="button" onClick={() => { setAnhBiaPreview(''); setFieldErrors(p => ({...p, anhBia: ''})) }} className="mt-2 w-full text-center text-xs text-red-400 hover:text-red-600">
+                <button type="button" onClick={() => { setAnhBiaPreview(''); setAnhBiaFile(null); setFieldErrors(p => ({...p, anhBia: ''})) }} className="mt-2 w-full text-center text-xs text-red-400 hover:text-red-600">
                   Xóa ảnh
                 </button>
               )}

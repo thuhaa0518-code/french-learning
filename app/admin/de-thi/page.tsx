@@ -30,7 +30,7 @@ export default async function AdminDeThiPage({
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
       orderBy: { createdAt: 'desc' },
-      include: { _count: { select: { questions: true } } },
+      include: { _count: { select: { questions: true, attempts: true } } },
     }),
     prisma.exam.count({ where }),
     prisma.exam.count(),
