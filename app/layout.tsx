@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { Exo } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
 import { viVN } from '@clerk/localizations'
@@ -74,9 +75,13 @@ export default function RootLayout({
       <html lang="vi" suppressHydrationWarning>
         <body className={`${exo.variable} font-exo antialiased`} suppressHydrationWarning>
           <ToastProvider>
-            <ConditionalNavbar />
+            <Suspense fallback={null}>
+              <ConditionalNavbar />
+            </Suspense>
             <main>{children}</main>
-            <ConditionalFooter />
+            <Suspense fallback={null}>
+              <ConditionalFooter />
+            </Suspense>
           </ToastProvider>
         </body>
       </html>
