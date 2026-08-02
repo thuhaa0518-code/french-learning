@@ -25,8 +25,8 @@ export default function PreviewModal({ url, title = 'Preview' }: PreviewModalPro
 
   return (
     <>
-      <button 
-        type="button" 
+      <button
+        type="button"
         onClick={() => setIsOpen(true)}
         className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
       >
@@ -35,7 +35,7 @@ export default function PreviewModal({ url, title = 'Preview' }: PreviewModalPro
 
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 p-4 sm:p-6 backdrop-blur-sm animate-in fade-in duration-200">
-          <div 
+          <div
             className="flex w-full max-w-6xl h-full max-h-[90vh] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl animate-in zoom-in-95 duration-200 border border-white/20"
             onClick={(e) => e.stopPropagation()}
           >
@@ -44,9 +44,9 @@ export default function PreviewModal({ url, title = 'Preview' }: PreviewModalPro
                 {title}
               </h3>
               <div className="flex items-center gap-4">
-                <a 
-                  href={url} 
-                  target="_blank" 
+                <a
+                  href={url}
+                  target="_blank"
                   className="text-sm font-semibold text-primary hover:underline flex items-center gap-1.5"
                   rel="noreferrer"
                 >
@@ -55,7 +55,7 @@ export default function PreviewModal({ url, title = 'Preview' }: PreviewModalPro
                   </svg>
                   Mở tab mới
                 </a>
-                <button 
+                <button
                   onClick={() => setIsOpen(false)}
                   className="rounded-full p-1.5 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-900 bg-white border border-gray-300 shadow-sm"
                 >
@@ -63,11 +63,11 @@ export default function PreviewModal({ url, title = 'Preview' }: PreviewModalPro
                 </button>
               </div>
             </div>
-            
+
             <div className="flex-1 bg-gray-100 relative">
-              <iframe 
-                src={previewUrl} 
-                className="absolute inset-0 w-full h-full border-0" 
+              <iframe
+                src={previewUrl}
+                className="absolute inset-0 w-full h-full border-0"
                 title={title}
               />
             </div>

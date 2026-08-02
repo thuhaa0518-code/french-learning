@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import FlashcardDeckForm from '@/components/admin/FlashcardDeckForm'
 import PreviewModal from '@/components/admin/PreviewModal'
+import DeleteDeckButton from '@/components/admin/DeleteDeckButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,6 +31,7 @@ export default async function AdminFlashcardDetailPage({
           <span>Chỉnh sửa</span>
         </div>
         <div className="flex items-center gap-2">
+          <DeleteDeckButton deckId={id} tieuDe={deck.tieuDe} />
           <PreviewModal url={`/flashcard/${id}`} title="Preview Flashcard" />
           <button form="flashcard-form" name="action" value={deck.isPublish ? 'publish' : 'draft'} type="submit" className="rounded-lg px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity" style={{ backgroundColor: '#CB30E0' }}>Lưu</button>
         </div>

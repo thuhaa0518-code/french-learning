@@ -20,11 +20,53 @@ export default function FlashcardFlip({ tuPhap, nghiaViet, phatAm, viDu, audioUr
   const { toast } = useToast()
   const [flipped, setFlipped] = useState(false)
 
+  // getVoices() trả về rỗng nếu browser chưa load xong → dùng Promise để chờ
+  const getVoicesReady = (): Promise<SpeechSynthesisVoice[]> => {
+    return new Promise((resolve) => {
+      const voices = window.speechSynthesis.getVoices()
+      if (voices.length > 0) {
+        resolve(voices)
+        return
+      }
+      // Chờ event voiceschanged (lần đầu tiên load trang)
+      window.speechSynthesis.onvoiceschanged = () => {
+        resolve(window.speechSynthesis.getVoices())
+      }
+    })
+  }
+
   const playAudio = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!audioUrl) return
-    new Audio(audioUrl).play().catch(() => {
-      toast('Audio không tải được', 'error')
+
+    // Ưu tiên file audio nếu có
+    if (audioUrl) {
+      new Audio(audioUrl).play().catch(() => {
+        toast('Audio không tải được', 'error')
+      })
+      return
+    }
+
+    // Fallback: Web Speech API đọc tiếng Pháp tự động
+    if (!('speechSynthesis' in window)) {
+      toast('Trình duyệt không hỗ trợ phát âm', 'error')
+      return
+    }
+
+    window.speechSynthesis.cancel()
+
+    const utterance = new SpeechSynthesisUtterance(tuPhap)
+    utterance.lang = 'fr-FR'
+    utterance.rate = 0.85
+    utterance.pitch = 1
+
+    // Chờ voices sẵn sàng rồi mới phát
+    getVoicesReady().then((voices) => {
+      const frenchVoice =
+        voices.find((v) => v.lang === 'fr-FR') ??
+        voices.find((v) => v.lang.startsWith('fr'))
+
+      if (frenchVoice) utterance.voice = frenchVoice
+      window.speechSynthesis.speak(utterance)
     })
   }
 

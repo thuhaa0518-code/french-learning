@@ -306,6 +306,7 @@ export default forwardRef<LessonFormHandle, LessonFormProps>(function LessonForm
   const [chuDe, setChuDe] = useState(defaultValues?.chuDe ?? 'VOCABULARY')
   const [thoiGianDoc, setThoiGianDoc] = useState<number | ''>(defaultValues?.thoiGianDoc ?? 5)
   const [sections, setSections] = useState<Section[]>(defaultValues?.sections ?? [])
+  const [draggedSectionIndex, setDraggedSectionIndex] = useState<number | null>(null)
 
   const addSection = (loai: SectionType) => {
     setSections(prev => [...prev, { loai, data: defaultData(loai), thuTu: prev.length }])
@@ -535,14 +536,37 @@ export default forwardRef<LessonFormHandle, LessonFormProps>(function LessonForm
           <label className="mb-3 block text-[15px] font-semibold text-gray-700">Nội dung bài học</label>
           <div className="flex flex-col gap-3">
             {sections.map((s, idx) => (
-              <BlockWrapper
+              <div
                 key={idx}
-                section={s}
-                idx={idx}
-                total={sections.length}
-                onRemove={() => removeSection(idx)}
-                onUpdate={data => updateSection(idx, data)}
-              />
+                draggable
+                onDragStart={(e) => {
+                  setDraggedSectionIndex(idx)
+                  e.dataTransfer.effectAllowed = 'move'
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault()
+                  e.dataTransfer.dropEffect = 'move'
+                }}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  if (draggedSectionIndex === null || draggedSectionIndex === idx) return
+                  const newSections = [...sections]
+                  const [removed] = newSections.splice(draggedSectionIndex, 1)
+                  newSections.splice(idx, 0, removed)
+                  setSections(newSections.map((sec, i) => ({ ...sec, thuTu: i })))
+                  setDraggedSectionIndex(null)
+                }}
+                onDragEnd={() => setDraggedSectionIndex(null)}
+                className={`transition-all rounded-xl ${draggedSectionIndex === idx ? 'opacity-50 scale-[1.02] shadow-lg ring-2 ring-primary' : ''}`}
+              >
+                <BlockWrapper
+                  section={s}
+                  idx={idx}
+                  total={sections.length}
+                  onRemove={() => removeSection(idx)}
+                  onUpdate={data => updateSection(idx, data)}
+                />
+              </div>
             ))}
           </div>
 

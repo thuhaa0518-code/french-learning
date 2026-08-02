@@ -3,12 +3,14 @@
 import { useRef, useState } from 'react'
 import Link from 'next/link'
 import LessonForm, { type LessonFormHandle } from '@/components/admin/LessonForm'
+import PreviewModal from '@/components/admin/PreviewModal'
 
 interface LessonFormPageProps {
   lessonId?: string
+  lessonSlug?: string
 }
 
-export default function LessonFormPage({ lessonId }: LessonFormPageProps) {
+export default function LessonFormPage({ lessonId, lessonSlug }: LessonFormPageProps) {
   const formRef = useRef<LessonFormHandle>(null)
   const [saving, setSaving] = useState(false)
 
@@ -52,27 +54,15 @@ export default function LessonFormPage({ lessonId }: LessonFormPageProps) {
               disabled={saving}
               className="flex items-center gap-1.5 rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 18" fill="currentColor" className="w-[14px] h-[18px]">
-                <path fillRule="evenodd" clipRule="evenodd" d="M5 1h4v1H5z M1 3h12v1H1z M2 5v12h10V5H2z M3 6h8v10H3V6z M5 8h1v6H5V8z M8 8h1v6H8V8z" />
-              </svg>
               Xóa bài học
             </button>
           )}
 
           {/* Preview */}
-          <Link
-            href={lessonId ? `/bai-hoc` : '#'}
-            target={lessonId ? '_blank' : undefined}
-            className="flex items-center gap-1.5 rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </svg>
-            Preview
-          </Link>
+          <PreviewModal
+            url={lessonSlug ? `/bai-hoc/${lessonSlug}` : '/bai-hoc'}
+            title="Preview bài học"
+          />
 
           {/* Lưu bản nháp */}
           <button

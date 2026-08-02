@@ -16,13 +16,19 @@ const TOPIC_LABELS: Record<string, string> = {
 
 export default async function BaiHocDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>
+  searchParams: Promise<{ preview?: string }>
 }) {
   const { slug } = await params
+  const { preview } = await (searchParams || {})
 
   const lesson = await prisma.lesson.findUnique({
-    where: { slug, isPublish: true },
+    where: { 
+      slug, 
+      ...(preview !== '1' && { isPublish: true }) 
+    },
     include: {
       sections: { orderBy: { thuTu: 'asc' } },
     },

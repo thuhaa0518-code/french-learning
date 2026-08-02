@@ -12,6 +12,9 @@ export default function TaoMoiFlashcardPage() {
           <span>Tạo mới</span>
         </div>
         <div className="flex items-center gap-2">
+          <Link href="/admin/flashcard" className="flex items-center gap-1.5 rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors">
+            Xoá bộ thẻ
+          </Link>
           <button form="deck-form" name="action" value="draft" type="submit" className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors">Lưu bản nháp</button>
           <button form="deck-form" name="action" value="publish" type="submit" className="rounded-lg px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity" style={{ backgroundColor: '#CB30E0' }}>Đăng bài</button>
         </div>

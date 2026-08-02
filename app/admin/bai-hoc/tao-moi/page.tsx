@@ -14,13 +14,9 @@ export default function TaoMoiBaiHocPage() {
           <span>Tạo mới</span>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            form="lesson-form"
-            type="button"
-            className="rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors"
-          >
+          <Link href="/admin/bai-hoc" className="flex items-center gap-1.5 rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors">
             Xoá bài học
-          </button>
+          </Link>
           <button
             form="lesson-form"
             name="action"

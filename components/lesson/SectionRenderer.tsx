@@ -43,6 +43,34 @@ function TextBlock({ data }: { data: TextSectionContent }) {
   )
 }
 
+// Hàm dùng chung để đọc tiếng Pháp bằng Web Speech API
+function speakFrench(text: string) {
+  if (!('speechSynthesis' in window)) return
+  window.speechSynthesis.cancel()
+
+  const utterance = new SpeechSynthesisUtterance(text)
+  utterance.lang = 'fr-FR'
+  utterance.rate = 0.85
+  utterance.pitch = 1
+
+  const trySpeak = (voices: SpeechSynthesisVoice[]) => {
+    const frenchVoice =
+      voices.find((v) => v.lang === 'fr-FR') ??
+      voices.find((v) => v.lang.startsWith('fr'))
+    if (frenchVoice) utterance.voice = frenchVoice
+    window.speechSynthesis.speak(utterance)
+  }
+
+  const voices = window.speechSynthesis.getVoices()
+  if (voices.length > 0) {
+    trySpeak(voices)
+  } else {
+    window.speechSynthesis.onvoiceschanged = () => {
+      trySpeak(window.speechSynthesis.getVoices())
+    }
+  }
+}
+
 function VocabularyTable({ data }: { data: VocabularySectionContent }) {
   return (
     <div className="rounded-xl border border-gray-200 overflow-hidden shadow-sm">
@@ -64,7 +92,11 @@ function VocabularyTable({ data }: { data: VocabularySectionContent }) {
                 <div className="text-gray-800">{word.nghiaViet || word.nghia_viet}</div>
               </td>
               <td className="px-5 py-4 w-16 text-right">
-                <button className="text-gray-400 hover:text-[#CB30E0] transition-colors p-2 rounded-full hover:bg-purple-50" title="Nghe phát âm">
+                <button
+                  onClick={() => speakFrench(word.tuPhap || word.tu_phap)}
+                  className="text-gray-400 hover:text-[#CB30E0] transition-colors p-2 rounded-full hover:bg-purple-50"
+                  title="Nghe phát âm"
+                >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                     <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
@@ -79,6 +111,7 @@ function VocabularyTable({ data }: { data: VocabularySectionContent }) {
     </div>
   )
 }
+
 
 function GrammarBlock({ data }: { data: any }) {
   return (

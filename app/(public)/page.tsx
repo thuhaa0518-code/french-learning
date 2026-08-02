@@ -215,7 +215,7 @@ export default async function HomePage() {
               {sidebarLessons.map((lesson: any) => (
                 <Link key={lesson.id} href={`/bai-hoc/${lesson.slug}`}
                   className="group flex items-center gap-3 rounded-xl border border-gray-100 p-3 hover:border-primary/30 hover:bg-purple-50/40 transition-all">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-50 text-xl shrink-0">{TOPIC_ICONS[lesson.chuDe] ?? '📖'}</span>
+                  <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-50 text-xl shrink-0">{TOPIC_ICONS[lesson.chuDe] ?? TOPIC_ICONS['READING']}</span>
                   <div className="min-w-0">
                     <p className="text-[15px] font-semibold text-gray-900 group-hover:text-primary transition-colors line-clamp-1">
                       {lesson.tieuDe}

@@ -34,6 +34,7 @@ export default function ExamForm({ examId, defaultValues }: Props) {
   const router = useRouter()
   const { toast } = useToast()
   const [saving, setSaving] = useState(false)
+  const [draggedQuestionIndex, setDraggedQuestionIndex] = useState<number | null>(null)
   const [error, setError] = useState('')
   const [showVideoDeleteConfirm, setShowVideoDeleteConfirm] = useState(false)
   const [pendingEvent, setPendingEvent] = useState<React.FormEvent<HTMLFormElement> | null>(null)
@@ -269,7 +270,29 @@ export default function ExamForm({ examId, defaultValues }: Props) {
           <label className="mb-3 block text-[15px] font-semibold text-gray-700">Danh sách câu hỏi ({questions.length})</label>
           <div className="flex flex-col gap-4">
             {questions.map((q, qi) => (
-              <div key={qi} className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+              <div 
+                key={qi} 
+                draggable
+                onDragStart={(e) => {
+                  setDraggedQuestionIndex(qi)
+                  e.dataTransfer.effectAllowed = 'move'
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault()
+                  e.dataTransfer.dropEffect = 'move'
+                }}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  if (draggedQuestionIndex === null || draggedQuestionIndex === qi) return
+                  const newQuestions = [...questions]
+                  const [removed] = newQuestions.splice(draggedQuestionIndex, 1)
+                  newQuestions.splice(qi, 0, removed)
+                  setQuestions(newQuestions)
+                  setDraggedQuestionIndex(null)
+                }}
+                onDragEnd={() => setDraggedQuestionIndex(null)}
+                className={`rounded-xl border bg-white overflow-hidden transition-all ${draggedQuestionIndex === qi ? 'opacity-50 border-primary shadow-lg scale-[1.02]' : 'border-gray-200'}`}
+              >
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-gray-100 px-4 py-2.5 bg-gray-50/50">
                   <div className="flex items-center gap-2">

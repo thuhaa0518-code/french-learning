@@ -13,5 +13,5 @@ function createPrismaClient() {
 }
 
 export const prisma = globalForPrisma.prisma2 ?? createPrismaClient()
-
+// Giữ connection ổn định trong môi trường dev
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma2 = prisma

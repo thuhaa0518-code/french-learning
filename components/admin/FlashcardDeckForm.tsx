@@ -14,6 +14,7 @@ export default function FlashcardDeckForm({ deckId, defaultValues }: Props) {
   const router = useRouter()
   const { toast } = useToast()
   const [saving, setSaving] = useState(false)
+  const [draggedCardIndex, setDraggedCardIndex] = useState<number | null>(null)
   const [error, setError] = useState('')
   const [cardErrors, setCardErrors] = useState<Record<number, { tuPhap?: string, nghiaViet?: string, audio?: string }>>({})
 
@@ -125,7 +126,29 @@ export default function FlashcardDeckForm({ deckId, defaultValues }: Props) {
           <label className="mb-3 block text-[15px] font-semibold text-gray-700">Danh sách thẻ ({cards.length})</label>
           <div className="flex flex-col gap-3">
             {cards.map((card, i) => (
-              <div key={i} className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+              <div 
+                key={i} 
+                draggable
+                onDragStart={(e) => {
+                  setDraggedCardIndex(i)
+                  e.dataTransfer.effectAllowed = 'move'
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault()
+                  e.dataTransfer.dropEffect = 'move'
+                }}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  if (draggedCardIndex === null || draggedCardIndex === i) return
+                  const newCards = [...cards]
+                  const [removed] = newCards.splice(draggedCardIndex, 1)
+                  newCards.splice(i, 0, removed)
+                  setCards(newCards)
+                  setDraggedCardIndex(null)
+                }}
+                onDragEnd={() => setDraggedCardIndex(null)}
+                className={`rounded-xl border bg-white overflow-hidden transition-all ${draggedCardIndex === i ? 'opacity-50 border-primary shadow-lg scale-[1.02]' : 'border-gray-200'}`}
+              >
                 {/* Card header */}
                 <div className="flex items-center justify-between border-b border-gray-100 px-4 py-2">
                   <div className="flex items-center gap-2">
@@ -168,32 +191,10 @@ export default function FlashcardDeckForm({ deckId, defaultValues }: Props) {
                         {cardErrors[i]?.nghiaViet && <p className="mt-1 text-[11px] font-semibold text-red-500">{cardErrors[i].nghiaViet}</p>}
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <div className="flex-1">
+                      <div className="w-full">
                         <label className="mb-1 block text-xs font-medium text-black">Ví dụ</label>
                         <input value={card.viDu} onChange={e => updateCard(i, 'viDu', e.target.value)} className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm outline-none focus:border-primary" placeholder="Bonjour, bienvenue chez nous." />
                       </div>
-                      <div className="w-48">
-                        <label className="mb-1 block text-xs font-medium text-black">Audio (MP3)</label>
-                        <input type="file" accept="audio/mpeg" onChange={e => {
-                          const file = e.target.files?.[0]
-                          if (file) {
-                            if (file.type !== 'audio/mpeg') {
-                              setCardErrors(p => ({...p, [i]: {...p[i], audio: 'Định dạng không hỗ trợ. Chấp nhận: MP3'}}))
-                              return
-                            }
-                            if (file.size > 5 * 1024 * 1024) {
-                              setCardErrors(p => ({...p, [i]: {...p[i], audio: 'File audio vượt quá 5MB'}}))
-                              return
-                            }
-                            // Valid
-                            setCardErrors(p => ({...p, [i]: {...p[i], audio: undefined}}))
-                            setCards(prev => prev.map((c, idx) => idx === i ? { ...c, audioFile: file } : c))
-                          }
-                        }} className="block w-full text-xs file:mr-2 file:rounded-md file:border-0 file:bg-gray-100 file:px-2 file:py-1 file:text-xs file:font-semibold hover:file:bg-gray-200" />
-                        {cardErrors[i]?.audio && <p className="mt-1 text-[11px] font-semibold text-red-500">{cardErrors[i].audio}</p>}
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>

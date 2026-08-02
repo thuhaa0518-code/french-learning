@@ -6,13 +6,19 @@ export const dynamic = 'force-dynamic'
 
 export default async function DeThiDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ preview?: string }>
 }) {
   const { id } = await params
+  const { preview } = await searchParams
 
   const exam = await prisma.exam.findFirst({
-    where: { id, isPublish: true },
+    where: { 
+      id, 
+      ...(preview !== '1' && { isPublish: true }) 
+    },
     include: {
       questions: {
         orderBy: { thuTu: 'asc' },

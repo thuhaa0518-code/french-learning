@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import ExamForm from '@/components/admin/ExamForm'
 import PreviewModal from '@/components/admin/PreviewModal'
+import DeleteExamButton from '@/components/admin/DeleteExamButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,8 +36,18 @@ export default async function AdminDeThiDetailPage({
           <span>Chỉnh sửa</span>
         </div>
         <div className="flex items-center gap-2">
+          <DeleteExamButton examId={id} tieuDe={exam.tieuDe} />
           <PreviewModal url={`/de-thi/${id}`} title="Preview Đề thi" />
-          <button form="exam-form" name="action" value={exam.isPublish ? 'publish' : 'draft'} type="submit" className="rounded-lg px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity" style={{ backgroundColor: '#CB30E0' }}>Lưu</button>
+          <button
+            form="exam-form"
+            name="action"
+            value={exam.isPublish ? 'publish' : 'draft'}
+            type="submit"
+            className="rounded-lg px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+            style={{ backgroundColor: '#CB30E0' }}
+          >
+            Lưu
+          </button>
         </div>
       </div>
       <div className="flex-1 overflow-y-auto">

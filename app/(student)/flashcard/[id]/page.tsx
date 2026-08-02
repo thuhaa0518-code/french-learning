@@ -4,13 +4,19 @@ import StudySession from '@/components/flashcard/StudySession'
 
 export default async function FlashcardStudyPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ preview?: string }>
 }) {
   const { id } = await params
+  const { preview } = await searchParams
 
   const deck = await prisma.flashcardDeck.findFirst({
-    where: { id, isPublish: true },
+    where: { 
+      id, 
+      ...(preview !== '1' && { isPublish: true }) 
+    },
     include: { flashcards: { orderBy: { tuPhap: 'asc' } } },
   })
 
