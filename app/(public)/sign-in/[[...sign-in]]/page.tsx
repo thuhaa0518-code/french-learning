@@ -28,7 +28,7 @@ export default function SignInPage() {
       <div className="flex w-full items-center justify-center overflow-hidden bg-white px-8 lg:w-1/2">
         <div className="w-full max-w-md flex flex-col items-center justify-center">
           <div className="mb-6 flex items-center justify-center gap-2">
-            <Image src="/logo-icon.png" alt="FrenchGo Logo" width={36} height={36} className="w-9 h-9 object-contain" />
+            <Image src="/logo-icon-v2.png" alt="FrenchGo Logo" width={36} height={36} className="w-9 h-9 object-contain" />
             <span className="text-2xl font-bold text-primary">FrenchGo</span>
           </div>
           {/* Tabs */}

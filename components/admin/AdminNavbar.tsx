@@ -55,7 +55,7 @@ export default function AdminNavbar() {
   const imageUrl = user?.imageUrl
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 w-full items-center justify-between border-b border-gray-100 bg-white px-6 shadow-sm">
+    <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-gray-100 bg-white px-6 shadow-sm">
       {/* Logo + ADMIN badge + Hamburger Toggle */}
       <div className="flex items-center gap-3 shrink-0">
         <button 
@@ -67,9 +67,9 @@ export default function AdminNavbar() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
-        <Link href="/admin" className="flex items-center gap-1.5">
-          <Image src="/logo-icon.png" alt="FrenchGo" width={36} height={36} className="object-contain mix-blend-multiply" />
-          <span className="text-[22px] font-black text-black">FrenchGo</span>
+        <Link href="/admin" className="flex items-center gap-2.5">
+          <Image src="/logo-icon-v2.png" alt="FrenchGo" width={48} height={48} className="object-contain mix-blend-multiply" />
+          <span className="text-4xl font-black text-black mt-0.5">FrenchGo</span>
         </Link>
         <span className="rounded-md border border-primary px-2 py-0.5 text-[11px] font-bold text-primary">ADMIN</span>
       </div>
@@ -82,7 +82,7 @@ export default function AdminNavbar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex h-full items-center px-6 text-[17px] font-medium transition-colors ${
+              className={`flex h-full items-center px-6 text-lg font-medium transition-colors ${
                 isActive
                   ? 'bg-[#CB30E0]/10 text-[#CB30E0] font-semibold'
                   : 'text-black hover:text-[#CB30E0] hover:bg-gray-50'

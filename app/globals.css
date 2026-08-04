@@ -20,7 +20,7 @@
   --background: #ffffff;
   --foreground: #000000;
   --font-exo: 'Exo', sans-serif;
-  font-size: 13px;
+  font-size: 15.5px;
 }
 
 body {
@@ -52,4 +52,12 @@ div:has(> a[href*="clerk.dev"]) + div,
 .cl-internal-phgxyj,
 .cl-userButtonPopoverFooter {
   display: none !important;
+}
+
+@keyframes pageFadeIn {
+  from { opacity: 0.3; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-page-fade {
+  animation: pageFadeIn 0.4s ease-out forwards;
 }

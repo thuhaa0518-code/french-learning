@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { ok, err } from '@/lib/api-response'
 import { requireAdmin } from '@/lib/auth'

@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { ok, err } from '@/lib/api-response'
 import { requireAdmin } from '@/lib/auth'
@@ -51,6 +52,10 @@ export async function POST(req: NextRequest) {
     }
 
     const deck = await prisma.flashcardDeck.create({ data: parsed.data })
+    if (deck.isPublish) {
+      revalidatePath('/flashcard')
+      revalidatePath('/')
+    }
     return ok({ deck }, 201)
   } catch (error) {
     console.error('[POST /api/flashcard/bo-the]', error)

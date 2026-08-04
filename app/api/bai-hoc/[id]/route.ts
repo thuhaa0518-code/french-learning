@@ -63,10 +63,11 @@ export async function PUT(req: NextRequest, { params }: Params) {
       })
     })
 
-    // Revalidate khi toggle publish
+    // Revalidate kờ khi toggle publish
     if ('isPublish' in lessonData) {
       revalidatePath('/bai-hoc')
       revalidatePath(`/bai-hoc/${lesson.slug}`)
+      revalidatePath('/')
     }
 
     return ok({ lesson })
@@ -98,6 +99,7 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
 
     await prisma.lesson.delete({ where: { id } })
     revalidatePath('/bai-hoc')
+    revalidatePath('/')
 
     return ok({ deleted: true })
   } catch (error) {

@@ -25,7 +25,7 @@ export default function NavLinks() {
         <Link
           key={item.href}
           href={item.href}
-          className={`flex h-full items-center px-5 text-sm font-medium transition-colors ${
+          className={`flex h-full items-center px-6 text-base font-medium transition-colors ${
             isActive(item.href)
               ? 'bg-[#F4E9F1] text-primary font-semibold'
               : 'text-gray-600 hover:text-primary hover:bg-gray-50'
@@ -37,7 +37,7 @@ export default function NavLinks() {
       {isLoggedIn && (
         <Link
           href="/dashboard"
-          className={`flex h-full items-center px-5 text-sm font-medium transition-colors ${
+          className={`flex h-full items-center px-6 text-base font-medium transition-colors ${
             pathname.startsWith('/dashboard')
               ? 'bg-[#F4E9F1] text-primary font-semibold'
               : 'text-gray-600 hover:text-primary hover:bg-gray-50'

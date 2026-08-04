@@ -17,7 +17,7 @@ export default function LevelBadge({ level, className = '' }: LevelBadgeProps) {
 
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${colorClass} ${className}`}
+      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-sm font-semibold ${colorClass} ${className}`}
     >
       {level}
     </span>

@@ -101,6 +101,7 @@ export async function POST(req: NextRequest) {
     // Revalidate cache nếu lesson được publish
     if (lesson.isPublish) {
       revalidatePath('/bai-hoc')
+      revalidatePath('/')
     }
 
     return ok({ lesson }, 201)

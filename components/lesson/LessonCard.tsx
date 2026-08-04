@@ -33,13 +33,13 @@ export default function LessonCard({ slug, tieuDe, level, chuDe, anhBia, thoiGia
       <div className="p-5">
         <div className="mb-2 flex items-center gap-2">
           <LevelBadge level={level} />
-          <span className="text-xs text-gray-500">{TOPIC_LABELS[chuDe] ?? chuDe}</span>
+          <span className="text-sm text-gray-500">{TOPIC_LABELS[chuDe] ?? chuDe}</span>
         </div>
         <h3 className="mb-1 font-semibold text-gray-900 line-clamp-2 group-hover:text-primary transition-colors">
           {tieuDe}
         </h3>
         {thoiGianDoc && (
-          <p className="text-xs text-gray-400">⏱ {thoiGianDoc} phút đọc</p>
+          <p className="text-sm text-gray-400">⏱ {thoiGianDoc} phút đọc</p>
         )}
       </div>
     </Link>

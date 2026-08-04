@@ -1,9 +1,12 @@
 import Link from 'next/link'
+import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
-import { getCurrentUser } from '@/lib/auth'
 import Pagination from '@/components/shared/Pagination'
+import SearchInput from '@/components/shared/SearchInput'
+import { getCachedExams, getUserBestScores } from '@/lib/cached-queries'
 
-export const dynamic = 'force-dynamic'
+// Cache listing 60 giây
+export const revalidate = 60
 
 const FILTER_TABS = ['Tất cả', 'A1', 'A2', 'B1', 'B2', 'DELF', 'Thực hành', 'Có video giải']
 
@@ -27,41 +30,30 @@ export default async function DeThiPage({
     ...(search ? { tieuDe: { contains: search, mode: 'insensitive' as const } } : {}),
   }
 
-  // Lấy user hiện tại (nếu đã đăng nhập) để hiển thị điểm cao nhất
-  const user = await getCurrentUser()
-
-  const [exams, total] = await Promise.all([
-    prisma.exam.findMany({
+  // Chạy song song: cached exams + auth
+  const [{ exams, total }, { userId }] = await Promise.all([
+    getCachedExams({
       where,
       skip: (page - 1) * limit,
       take: limit,
       orderBy: { createdAt: sort as any },
-      include: { _count: { select: { questions: true } } },
     }),
-    prisma.exam.count({ where }),
+    auth(),
   ])
 
-  // Lấy điểm cao nhất của user cho từng đề thi đang hiển thị
-  const bestScores: Record<string, number> = {}
-  if (user && exams.length > 0) {
-    const examIds = exams.map((e: any) => e.id)
-    const attempts = await prisma.examAttempt.findMany({
-      where: {
-        userId: user.id,
-        examId: { in: examIds },
-        daNop: true,
-        diemSo: { not: null },
-      },
-      select: { examId: true, diemSo: true },
+  // Lấy điểm cao nhất của user
+  let bestScores: Record<string, number> = {}
+  if (userId && exams.length > 0) {
+    const user = await prisma.user.findUnique({
+      where: { clerkId: userId },
+      select: { id: true },
     })
-    for (const a of attempts) {
-      if (a.diemSo !== null) {
-        if (bestScores[a.examId] === undefined || a.diemSo > bestScores[a.examId]) {
-          bestScores[a.examId] = Math.round(a.diemSo)
-        }
-      }
+    if (user) {
+      bestScores = await getUserBestScores(user.id, exams.map((e: any) => e.id))
     }
   }
+
+
 
   const totalPages = Math.ceil(total / limit)
   const start = total === 0 ? 0 : (page - 1) * limit + 1
@@ -70,7 +62,7 @@ export default async function DeThiPage({
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="mx-auto max-w-4xl px-6 py-8">
+      <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-10 py-10">
 
         {/* Title */}
         <h1 className="mb-5 text-2xl font-extrabold text-primary">Đề Thi</h1>
@@ -99,21 +91,13 @@ export default async function DeThiPage({
         </div>
 
         {/* Search */}
-        <form method="GET" className="mb-6 border-b border-gray-100 pb-6">
-          {level && <input type="hidden" name="level" value={level} />}
-          <div className="flex items-center gap-3 rounded-full border border-gray-200 bg-white px-5 py-2.5">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-            </svg>
-            <input
-              type="text"
-              name="search"
-              defaultValue={search}
-              placeholder="Tìm kiếm đề thi"
-              className="flex-1 bg-transparent text-[15px] outline-none placeholder:text-gray-400"
-            />
-          </div>
-        </form>
+        <div className="mb-6 border-b border-gray-100 pb-6">
+          <SearchInput
+            placeholder="Tìm kiếm đề thi"
+            containerClassName="flex items-center gap-3 rounded-full border border-gray-200 bg-white px-5 py-2.5"
+            inputClassName="flex-1 bg-transparent text-[15px] outline-none placeholder:text-gray-400"
+          />
+        </div>
 
         {/* Meta */}
         <div className="mb-6 flex items-center justify-between">
@@ -138,20 +122,20 @@ export default async function DeThiPage({
         {exams.length === 0 ? (
           <div className="py-16 text-center text-gray-400">Chưa có đề thi nào</div>
         ) : (
-          <div className="grid grid-cols-3 gap-6">
+          <div key={page} className="grid grid-cols-3 gap-6 animate-page-fade">
             {exams.map((exam: any) => {
               const bestScore = bestScores[exam.id]
               const daDo = bestScore !== undefined
               return (
                 <div key={exam.id} className="relative flex flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_2px_12px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-shadow">
                   {/* Badge positioned absolutely */}
-                  <div className="absolute top-5 left-5 inline-flex items-center justify-center rounded-full bg-[#C930E0] px-3 py-1.5 text-[11px] font-bold text-white shadow-sm">
+                  <div className="absolute top-5 left-5 inline-flex items-center justify-center rounded-full bg-[#C930E0] px-3 py-1.5 text-sm font-bold text-white shadow-sm">
                     {exam.level}
                   </div>
-                  <h3 className="mt-8 mb-5 text-[14px] font-bold text-gray-900 line-clamp-2 leading-snug text-center min-h-[40px]">
+                  <h3 className="mt-8 mb-5 text-base font-bold text-gray-900 line-clamp-2 leading-snug text-center min-h-[40px]">
                     {exam.tieuDe}
                   </h3>
-                  <div className="mb-6 flex items-center justify-center gap-3 text-[10px] font-medium text-gray-500 whitespace-nowrap">
+                  <div className="mb-6 flex items-center justify-center gap-3 text-sm font-medium text-gray-500 whitespace-nowrap">
                     <span className="flex items-center gap-1">
                       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" className="text-[#C930E0] shrink-0">
                         <circle cx="12" cy="12" r="10" fill="currentColor"/>
@@ -186,7 +170,7 @@ export default async function DeThiPage({
                     )}
                   </div>
                   <Link href={`/de-thi/${exam.id}`}
-                    className="mt-auto border-t border-gray-100 pt-5 text-center text-[13px] font-bold text-gray-900 transition-opacity hover:opacity-70">
+                    className="mt-auto border-t border-gray-100 pt-5 text-center text-sm font-bold text-gray-900 transition-opacity hover:opacity-70">
                     {daDo ? 'Làm Lại' : 'Bắt Đầu'}
                   </Link>
                 </div>

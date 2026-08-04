@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { ok, err } from '@/lib/api-response'
 import { requireAdmin } from '@/lib/auth'
@@ -47,6 +48,8 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     }
 
     await prisma.flashcardDeck.delete({ where: { id } })
+    revalidatePath('/flashcard')
+    revalidatePath('/')
     return ok({ deleted: true })
   } catch (error) {
     console.error('[DELETE /api/flashcard/bo-the/[id]]', error)
@@ -91,6 +94,8 @@ export async function PUT(req: NextRequest, { params }: Params) {
       })
     })
 
+    revalidatePath('/flashcard')
+    revalidatePath('/')
     return ok({ deck })
   } catch (error) {
     console.error('[PUT /api/flashcard/bo-the/[id]]', error)

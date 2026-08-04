@@ -153,7 +153,7 @@ export default function ExamTable({ exams, total, page, pageSize }: Props) {
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-2">
                       <Link href={`/admin/de-thi/${exam.id}`} title="Quản lý câu hỏi" className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors text-gray-600"><IconEdit /></Link>
-                      <button onClick={() => handleDeleteSingle(exam.id)} title="Xóa" disabled={loading} className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-red-50 transition-colors text-gray-600 hover:text-red-500 disabled:opacity-50"><IconTrash /></button>
+                      <button onClick={() => handleDeleteSingle(exam.id)} title="Xóa" disabled={loading} className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors text-gray-600 disabled:opacity-50"><IconTrash /></button>
                     </div>
                   </td>
                 </tr>
@@ -175,7 +175,7 @@ export default function ExamTable({ exams, total, page, pageSize }: Props) {
                 {!hasPublishedSelected && (
                   <button onClick={handleBulkPublish} disabled={loading} className="px-5 py-1.5 text-sm font-bold text-gray-700 bg-gray-100 border border-gray-200 rounded-[20px] transition-opacity hover:opacity-90 hover:bg-gray-200 disabled:opacity-50 shadow-sm">Đăng bài</button>
                 )}
-                <button onClick={handleBulkDelete} disabled={loading} className="px-5 py-1.5 text-sm font-bold text-red-500 bg-red-50 border border-red-200 rounded-[20px] hover:bg-red-100 transition-colors disabled:opacity-50 shadow-sm">Xoá</button>
+                <button onClick={handleBulkDelete} disabled={loading} className="px-5 py-1.5 text-sm font-bold text-red-500 bg-white border border-red-200 rounded-[20px] hover:bg-gray-50 transition-colors disabled:opacity-50 shadow-sm">Xoá</button>
               </>
             ) : <span className="text-sm text-gray-400 font-medium">{total} đề thi</span>}
           </div>

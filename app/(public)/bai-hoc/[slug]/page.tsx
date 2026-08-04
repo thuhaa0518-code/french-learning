@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import SectionRenderer from '@/components/lesson/SectionRenderer'
@@ -24,35 +25,33 @@ export default async function BaiHocDetailPage({
   const { slug } = await params
   const { preview } = await (searchParams || {})
 
-  const lesson = await prisma.lesson.findUnique({
-    where: { 
-      slug, 
-      ...(preview !== '1' && { isPublish: true }) 
-    },
-    include: {
-      sections: { orderBy: { thuTu: 'asc' } },
-    },
-  })
+  // Chạy song song: lesson + auth
+  const [lesson, { userId }] = await Promise.all([
+    prisma.lesson.findUnique({
+      where: { 
+        slug, 
+        ...(preview !== '1' && { isPublish: true }) 
+      },
+      include: {
+        sections: { orderBy: { thuTu: 'asc' } },
+      },
+    }),
+    auth(),
+  ])
 
   if (!lesson) notFound()
 
-  const { userId } = await auth()
+  // Chạy song song: user lookup + related deck
+  const [dbUser, relatedDeck] = await Promise.all([
+    userId ? prisma.user.findUnique({ where: { clerkId: userId }, select: { id: true } }) : null,
+    prisma.flashcardDeck.findFirst({
+      where: { isPublish: true, level: lesson.level },
+      include: { _count: { select: { flashcards: true } } },
+      orderBy: { createdAt: 'desc' },
+    }),
+  ])
 
-  let userDbId = null
-
-  if (userId) {
-    const user = await prisma.user.findUnique({ where: { clerkId: userId } })
-    if (user) {
-      userDbId = user.id
-    }
-  }
-
-  // Fetch a related flashcard deck for the sidebar
-  const relatedDeck = await prisma.flashcardDeck.findFirst({
-    where: { isPublish: true, level: lesson.level },
-    include: { _count: { select: { flashcards: true } } },
-    orderBy: { createdAt: 'desc' },
-  })
+  const userDbId = dbUser?.id ?? null
 
   // Extract sections for TOC
   const toc = lesson.sections.map((section: any, index: number) => {
@@ -82,9 +81,10 @@ export default async function BaiHocDetailPage({
       {/* 1. Full-width Header Image */}
       {lesson.anhBia && (
         <div className="w-full h-[300px] md:h-[400px] bg-gray-100 overflow-hidden relative">
-          <img src={lesson.anhBia} alt={lesson.tieuDe} className="w-full h-full object-cover" />
+          <Image src={lesson.anhBia} alt={lesson.tieuDe} fill className="object-cover" priority />
         </div>
       )}
+
 
       {/* Main Content Container */}
       <div className="mx-auto max-w-6xl px-6 mt-8">

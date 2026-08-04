@@ -1,12 +1,14 @@
 import Link from 'next/link'
 import { Suspense } from 'react'
-import { prisma } from '@/lib/prisma'
 import LessonCard from '@/components/lesson/LessonCard'
 import LessonFilter from '@/components/lesson/LessonFilter'
 import EmptyState from '@/components/shared/EmptyState'
 import Pagination from '@/components/shared/Pagination'
+import SearchInput from '@/components/shared/SearchInput'
+import { getCachedLessons } from '@/lib/cached-queries'
 
-export const dynamic = 'force-dynamic'
+// Cache kết quả 60 giây — đủ fresh cho nội dung học tập
+export const revalidate = 60
 
 const LEVELS = ['A1', 'A2', 'B1', 'B2']
 const CHU_DE_LABELS: Record<string, string> = {
@@ -40,15 +42,13 @@ export default async function BaiHocPage({
     ...(search ? { tieuDe: { contains: search, mode: 'insensitive' as const } } : {}),
   }
 
-  const [lessons, total] = await Promise.all([
-    prisma.lesson.findMany({
-      where,
-      skip: (page - 1) * limit,
-      take: limit,
-      orderBy: { createdAt: sort as any },
-    }),
-    prisma.lesson.count({ where }),
-  ])
+  const { lessons, total } = await getCachedLessons({
+    where,
+    skip: (page - 1) * limit,
+    take: limit,
+    orderBy: { createdAt: sort as any },
+  })
+
 
   const totalPages = Math.ceil(total / limit)
   const start = total === 0 ? 0 : (page - 1) * limit + 1
@@ -63,7 +63,7 @@ export default async function BaiHocPage({
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="mx-auto max-w-6xl px-6 py-8">
+      <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-10 py-10">
         {/* Title & Saved Link */}
         <div className="mb-5 flex items-center justify-between">
           <h1 className="text-2xl font-extrabold text-primary">Bài Học</h1>
@@ -98,21 +98,13 @@ export default async function BaiHocPage({
         </div>
 
         {/* Search */}
-        <form method="GET" className="mb-5">
-          {level && <input type="hidden" name="level" value={level} />}
-          {chu_de && <input type="hidden" name="chu_de" value={chu_de} />}
-          <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 shadow-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            </svg>
-            <input
-              name="search"
-              defaultValue={search}
-              placeholder="Tìm kiếm bài học"
-              className="flex-1 text-sm outline-none text-gray-700 placeholder-gray-400"
-            />
-          </div>
-        </form>
+        <div className="mb-5">
+          <SearchInput
+            placeholder="Tìm kiếm bài học"
+            containerClassName="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 shadow-sm"
+            inputClassName="flex-1 text-sm outline-none text-gray-700 placeholder-gray-400"
+          />
+        </div>
 
         <div className="mb-4 flex items-center justify-between">
           <p className="text-sm text-gray-500">
@@ -140,7 +132,7 @@ export default async function BaiHocPage({
             icon="📚"
           />
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div key={page} className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 animate-page-fade">
             {lessons.map((lesson: any) => (
               <LessonCard key={lesson.id} {...lesson} />
             ))}

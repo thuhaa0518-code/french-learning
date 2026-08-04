@@ -406,7 +406,7 @@ export default function LessonTable({
                         onClick={() => handleDeleteSingle(lesson.id)}
                         title="Xóa"
                         disabled={loading}
-                        className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-red-50 transition-colors text-gray-600 hover:text-red-500 disabled:opacity-50"
+                        className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-gray-100 transition-colors text-gray-600 disabled:opacity-50"
                       >
                         <IconTrash />
                       </button>
@@ -457,7 +457,7 @@ export default function LessonTable({
                 <button
                   onClick={handleBulkDelete}
                   disabled={loading}
-                  className="px-5 py-1.5 text-sm font-bold text-red-500 bg-red-50 border border-red-200 rounded-[20px] hover:bg-red-100 transition-colors disabled:opacity-50 shadow-sm"
+                  className="px-5 py-1.5 text-sm font-bold text-red-500 bg-white border border-red-200 rounded-[20px] hover:bg-gray-50 transition-colors disabled:opacity-50 shadow-sm"
                 >
                   Xoá
                 </button>

@@ -1,9 +1,12 @@
 import Link from 'next/link'
+import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import Pagination from '@/components/shared/Pagination'
-import { getCurrentUser } from '@/lib/auth'
+import SearchInput from '@/components/shared/SearchInput'
+import { getCachedDecks, getUserDeckProgress } from '@/lib/cached-queries'
 
-export const dynamic = 'force-dynamic'
+// Cache listing 60 giây; user progress được tải riêng và không được cache
+export const revalidate = 60
 
 export default async function FlashcardPage({
   searchParams,
@@ -23,31 +26,29 @@ export default async function FlashcardPage({
     ...(search ? { tieuDe: { contains: search, mode: 'insensitive' as const } } : {}),
   }
 
-  const [decks, total, user] = await Promise.all([
-    prisma.flashcardDeck.findMany({
+  // Chạy song song: cached decks + auth
+  const [{ decks, total }, { userId }] = await Promise.all([
+    getCachedDecks({
       where,
       skip: (page - 1) * limit,
       take: limit,
       orderBy: { createdAt: sort as any },
-      include: { _count: { select: { flashcards: true } } },
     }),
-    prisma.flashcardDeck.count({ where }),
-    getCurrentUser()
+    auth(),
   ])
 
-  // Lấy lịch sử học của user hiện tại
+  // Lấy tiến độ user (dùng raw SQL GROUP BY — nhanh hơn nhiều)
   let userDeckProgress: Record<string, number> = {}
-  if (user) {
-    const states = await prisma.flashcardState.findMany({
-      where: { userId: user.id },
-      select: { flashcard: { select: { deckId: true } } }
+  if (userId) {
+    const user = await prisma.user.findUnique({
+      where: { clerkId: userId },
+      select: { id: true },
     })
-    
-    states.forEach(s => {
-      const deckId = s.flashcard.deckId
-      userDeckProgress[deckId] = (userDeckProgress[deckId] || 0) + 1
-    })
+    if (user) {
+      userDeckProgress = await getUserDeckProgress(user.id)
+    }
   }
+
 
   const totalPages = Math.ceil(total / limit)
   const start = (page - 1) * limit + 1
@@ -55,25 +56,19 @@ export default async function FlashcardPage({
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="mx-auto max-w-4xl px-6 py-8">
+      <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-10 py-10">
         {/* Header */}
         <h1 className="text-2xl font-extrabold tracking-widest text-primary mb-1">FLASHCARD</h1>
         <p className="text-sm text-gray-500 mb-6">{total} Flashcards</p>
 
         {/* Search */}
-        <form method="GET" className="mb-6">
-          <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 shadow-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            </svg>
-            <input
-              name="search"
-              defaultValue={search}
-              placeholder="Tìm kiếm flashcard"
-              className="flex-1 text-sm outline-none text-gray-700 placeholder-gray-400"
-            />
-          </div>
-        </form>
+        <div className="mb-6">
+          <SearchInput
+            placeholder="Tìm kiếm flashcard"
+            containerClassName="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 shadow-sm"
+            inputClassName="flex-1 text-sm outline-none text-gray-700 placeholder-gray-400"
+          />
+        </div>
 
         {/* Meta */}
         <div className="mb-4 flex items-center justify-between">
@@ -98,7 +93,7 @@ export default async function FlashcardPage({
         {decks.length === 0 ? (
           <div className="py-16 text-center text-gray-400">Chưa có bộ thẻ nào</div>
         ) : (
-          <div className="grid grid-cols-3 gap-5">
+          <div key={page} className="grid grid-cols-3 gap-5 animate-page-fade">
             {decks.map((deck: any, idx: number) => {
               // Trạng thái dựa trên tiến độ học thực tế
               const totalCards = deck._count.flashcards
@@ -136,7 +131,7 @@ export default async function FlashcardPage({
                   <h3 className="mb-3 text-lg font-bold text-gray-900 transition-colors group-hover:text-[#D946EF] line-clamp-2">
                     {deck.tieuDe}
                   </h3>
-                  <div className="mb-4 flex items-center gap-5 text-xs font-medium text-gray-500">
+                  <div className="mb-4 flex items-center gap-5 text-sm font-medium text-gray-500">
                     <span className="flex items-center gap-1.5">
                       <span className="h-1.5 w-1.5 rounded-full bg-[#D946EF]" />
                       {deck._count.flashcards} Thẻ
@@ -150,7 +145,7 @@ export default async function FlashcardPage({
                     <div className="flex-1 text-center font-bold text-gray-900 pr-10">
                       Bắt Đầu
                     </div>
-                    <div className="flex items-center gap-1 text-[11px] font-medium text-gray-400">
+                    <div className="flex items-center gap-1 text-sm font-medium text-gray-400">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D946EF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                       {deck.id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0) % 500 + 10}
                     </div>
