@@ -175,7 +175,7 @@ export default async function HomePage() {
 
             {/* Sidebar lessons — 2 cols stacked */}
             <div className="col-span-1 lg:col-span-2 flex flex-col justify-between gap-3">
-              {sidebarLessons.map((lesson: any) => (
+              {sidebarLessons.map((lesson: import('@prisma/client').Lesson) => (
                 <Link
                   key={lesson.id}
                   href={`/bai-hoc/${lesson.slug}`}

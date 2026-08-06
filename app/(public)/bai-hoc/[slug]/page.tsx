@@ -54,7 +54,7 @@ export default async function BaiHocDetailPage({
   const userDbId = dbUser?.id ?? null
 
   // Extract sections for TOC
-  const toc = lesson.sections.map((section: any, index: number) => {
+  const toc = lesson.sections.map((section: import('@prisma/client').LessonSection, index: number) => {
     let title = `Phần ${index + 1}`
     try {
       const content = JSON.parse(section.noiDung)
@@ -111,7 +111,7 @@ export default async function BaiHocDetailPage({
           
           {/* LEFT: Sections Content */}
           <div className="flex flex-col gap-10">
-            {lesson.sections.map((section: any) => (
+            {lesson.sections.map((section: import('@prisma/client').LessonSection) => (
               <div id={`section-${section.id}`} key={section.id} className="scroll-mt-24">
                 <SectionRenderer {...section} />
               </div>

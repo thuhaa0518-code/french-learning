@@ -94,7 +94,7 @@ export default async function FlashcardPage({
           <div className="py-16 text-center text-gray-400">Chưa có bộ thẻ nào</div>
         ) : (
           <div key={page} className="grid grid-cols-3 gap-5 animate-page-fade">
-            {decks.map((deck: any, idx: number) => {
+            {decks.map((deck: import('@prisma/client').FlashcardDeck & { _count: { flashcards: number } }, idx: number) => {
               // Trạng thái dựa trên tiến độ học thực tế
               const totalCards = deck._count.flashcards
               const studiedCards = userDeckProgress[deck.id] || 0

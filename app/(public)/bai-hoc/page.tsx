@@ -133,7 +133,7 @@ export default async function BaiHocPage({
           />
         ) : (
           <div key={page} className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 animate-page-fade">
-            {lessons.map((lesson: any) => (
+            {lessons.map((lesson: import('@prisma/client').Lesson) => (
               <LessonCard key={lesson.id} {...lesson} />
             ))}
           </div>

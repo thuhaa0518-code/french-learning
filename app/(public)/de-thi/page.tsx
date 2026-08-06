@@ -49,7 +49,7 @@ export default async function DeThiPage({
       select: { id: true },
     })
     if (user) {
-      bestScores = await getUserBestScores(user.id, exams.map((e: any) => e.id))
+      bestScores = await getUserBestScores(user.id, exams.map((e: import('@prisma/client').Exam) => e.id))
     }
   }
 
@@ -123,7 +123,7 @@ export default async function DeThiPage({
           <div className="py-16 text-center text-gray-400">Chưa có đề thi nào</div>
         ) : (
           <div key={page} className="grid grid-cols-3 gap-6 animate-page-fade">
-            {exams.map((exam: any) => {
+            {exams.map((exam: import('@prisma/client').Exam & { _count: { questions: number } }) => {
               const bestScore = bestScores[exam.id]
               const daDo = bestScore !== undefined
               return (
